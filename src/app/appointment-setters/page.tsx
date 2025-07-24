@@ -1,19 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { ChevronDown } from "lucide-react"
-import { supabase } from '@/lib/supabase'
 import ProtectedLayout from "@/components/ProtectedLayout"
 import AppointmentSetters from "@/components/AppointmentSetters"
-import { useBusinessData } from "@/hooks/useBusinessData"
+import { useAuth } from "@/contexts/AuthContext"
 import { useMetrics } from "@/hooks/useMetrics"
 
 export default function AppointmentSettersPage() {
-  const [user, setUser] = useState<any>(null)
+  const { user, businessData } = useAuth()
   const [timePeriod, setTimePeriod] = useState(30)
-  const [loading, setLoading] = useState(true)
 
-  const { businessData } = useBusinessData(user?.id)
   const businessId = businessData?.business_id
   
   const {
@@ -21,25 +18,13 @@ export default function AppointmentSettersPage() {
     loading: metricsLoading
   } = useMetrics(timePeriod, businessId)
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        window.location.href = '/'
-        return
-      }
-      setUser(user)
-      setLoading(false)
-    }
-    
-    fetchUser()
-  }, [])
-
-  if (loading || metricsLoading) {
+  if (metricsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center" style={{ backgroundColor: "#E8F4F8" }}>
-        <div className="text-gray-600">Loading...</div>
-      </div>
+      <ProtectedLayout>
+        <div className="container mx-auto px-6 py-8 flex items-center justify-center">
+          <div className="text-gray-600">Loading metrics...</div>
+        </div>
+      </ProtectedLayout>
     )
   }
 

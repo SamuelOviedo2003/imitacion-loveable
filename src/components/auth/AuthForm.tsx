@@ -80,6 +80,7 @@ export function AuthForm() {
           
           if (session?.user) {
             console.log('Session confirmed, redirecting to /home')
+            setMessage('') // Clear the message before redirect
             try {
               await router.push('/home')
               console.log('Router.push completed')
@@ -105,6 +106,7 @@ export function AuthForm() {
         // Also set up a backup redirect after 3 seconds regardless
         setTimeout(() => {
           console.log('Backup redirect triggered after 3 seconds')
+          setMessage('') // Clear message before backup redirect
           try {
             router.push('/home')
           } catch (error) {
