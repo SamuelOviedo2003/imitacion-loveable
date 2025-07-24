@@ -1,5 +1,3 @@
-import { Card } from "@/components/ui/card"
-import Link from "next/link"
 import Header from "@/components/Header"
 
 export default function SalesmanPage() {
