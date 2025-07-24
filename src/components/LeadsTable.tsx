@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import LeadDetailsModal from "@/components/LeadDetailsModal"
 import { 
   formatName, 
   formatUrgency, 
@@ -57,9 +59,22 @@ interface LeadsTableProps {
 }
 
 export default function LeadsTable({ leads }: LeadsTableProps) {
+  const [selectedLead, setSelectedLead] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  
   const displayLeads = leads.filter(lead => lead.start_time && lead.start_time !== '').length > 0 
     ? leads.filter(lead => lead.start_time && lead.start_time !== '') 
     : leadsTableData
+
+  const handleRowClick = (lead: any) => {
+    setSelectedLead(lead)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedLead(null)
+  }
 
   return (
     <Card className="bg-white border border-gray-200 shadow-sm">
@@ -91,7 +106,11 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 const nextStep = formatNextStep(lead)
                 
                 return (
-                  <tr key={lead.id || index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                  <tr 
+                    key={lead.id || index} 
+                    onClick={() => handleRowClick(lead)}
+                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
@@ -124,6 +143,12 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
           </table>
         </div>
       </CardContent>
+      
+      <LeadDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        lead={selectedLead}
+      />
     </Card>
   )
 }

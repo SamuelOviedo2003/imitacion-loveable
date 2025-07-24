@@ -54,3 +54,45 @@ export const formatGrade = (lead: any) => {
 export const formatNextStep = (lead: any) => {
   return lead.next_step || lead.status || 'Contact'
 }
+
+export const calculateTimeSince = (timestamp: string | Date): string => {
+  const now = new Date()
+  const past = new Date(timestamp)
+  const diffInMs = now.getTime() - past.getTime()
+  
+  const minutes = Math.floor(diffInMs / (1000 * 60))
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  
+  if (days > 0) {
+    const remainingHours = hours % 24
+    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`
+  } else if (hours > 0) {
+    const remainingMinutes = minutes % 60
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
+  } else {
+    return `${minutes}m`
+  }
+}
+
+export const formatDuration = (seconds: number): string => {
+  if (!seconds || seconds <= 0) return '0:00'
+  
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+export const formatAddress = (lead: any): string => {
+  const parts = []
+  if (lead.street_address) parts.push(lead.street_address)
+  if (lead.city) parts.push(lead.city)
+  if (lead.state) parts.push(lead.state)
+  if (lead.zip_code) parts.push(lead.zip_code)
+  return parts.join(', ')
+}
+
+export const generateGoogleMapsUrl = (address: string): string => {
+  const encodedAddress = encodeURIComponent(address)
+  return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
+}
