@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import { useState } from 'react'
 
@@ -56,7 +55,14 @@ export function AuthForm() {
           password,
         })
         if (error) throw error
-        window.location.href = '/home'
+        
+        // Wait for the session to be established before redirecting
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          window.location.href = '/home'
+        } else {
+          throw new Error('Authentication failed - no session established')
+        }
       }
     } catch (error: any) {
       setMessage(error.message)
@@ -68,12 +74,7 @@ export function AuthForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4" style={{ backgroundColor: "#E8F4F8" }}>
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
-        <div className="relative bg-gradient-to-br from-green-800 to-green-900 p-8 flex flex-col justify-between min-h-[600px]">
-          <div className="flex items-center text-white">
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            <span className="text-sm font-medium">Back to website</span>
-          </div>
-
+        <div className="relative bg-gradient-to-br from-green-800 to-green-900 p-8 flex flex-col justify-center min-h-[600px]">
           <div className="relative flex-1 flex items-center justify-center">
             <Image
               src="/images/house.png"
