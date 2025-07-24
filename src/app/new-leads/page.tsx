@@ -1,14 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Settings, Users, DollarSign, Phone, Clock, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/Button"
-import { Input } from "@/components/ui/Input"
+import { Users, DollarSign, Phone, Clock, ChevronDown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { supabase } from '@/lib/supabase'
-import Link from "next/link"
 import Header from "@/components/Header"
 
 // Mock data - will be replaced with real Supabase data
@@ -70,34 +67,29 @@ export default function NewLeadsPage() {
     closes: 0,
     totalAmount: 0
   })
-  const [serviceStats, setServiceStats] = useState({
-    fullReplacement: { amount: 0, growth: 0 },
-    repairService: { amount: 0, growth: 0 },
-    inspection: { amount: 0, growth: 0 }
-  })
-  const [revenueData, setRevenueData] = useState([
-    { month: "Jan", closedSales: 12, revenue: 45000 },
-    { month: "Feb", closedSales: 8, revenue: 32000 },
-    { month: "Mar", closedSales: 15, revenue: 58000 },
-    { month: "Apr", closedSales: 10, revenue: 38000 },
-    { month: "May", closedSales: 18, revenue: 72000 },
-    { month: "Jun", closedSales: 14, revenue: 56000 },
-  ])
   const [appointmentSetters, setAppointmentSetters] = useState<any[]>([])
 
   const fetchBusinessData = async (userId: string) => {
     try {
-      // First, get user's business_id from a profile/user table, or use account_id to find business
-      // For now, we'll get the business data based on user association
-      const { data: businessDataResult, error: businessError } = await supabase
-        .from('business_clients')
-        .select('*')
-        .limit(1)
+      // Get user's business_id from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('business_id')
+        .eq('id', userId)
         .single()
       
-      if (!businessError && businessDataResult) {
-        setBusinessData(businessDataResult)
-        return businessDataResult.business_id
+      if (!profileError && profileData?.business_id) {
+        // Get business data using the business_id from profiles
+        const { data: businessDataResult, error: businessError } = await supabase
+          .from('business_clients')
+          .select('*')
+          .eq('business_id', profileData.business_id)
+          .single()
+        
+        if (!businessError && businessDataResult) {
+          setBusinessData(businessDataResult)
+          return businessDataResult.business_id
+        }
       }
     } catch (error) {
       console.error('Error fetching business data:', error)
@@ -169,12 +161,18 @@ export default function NewLeadsPage() {
       startDate.setDate(startDate.getDate() - days)
       const startDateISO = startDate.toISOString()
 
-      // Fetch leads data within time period
-      const { data: leadsData, error: leadsError } = await supabase
+      // Fetch leads data within time period, filtered by business_id if available
+      let leadsQuery = supabase
         .from('leads')
         .select('*')
         .gte('created_at', startDateISO)
         .order('created_at', { ascending: false })
+
+      if (businessId) {
+        leadsQuery = leadsQuery.eq('business_id', businessId)
+      }
+
+      const { data: leadsData, error: leadsError } = await leadsQuery
       
       if (!leadsError && leadsData) {
         setLeads(leadsData)
@@ -205,39 +203,12 @@ export default function NewLeadsPage() {
           closes,
           totalAmount
         })
-
-        // Calculate service statistics
-        const calculateServiceStats = (serviceType: string) => {
-          const currentPeriodLeads = leadsData.filter(lead => {
-            const service = (lead.service || '').toLowerCase()
-            return service.includes(serviceType.toLowerCase())
-          })
-          
-          const currentAmount = currentPeriodLeads.reduce((sum, lead) => sum + (lead.closed_amount || 0), 0)
-          
-          // For growth calculation, compare with previous period
-          const previousStartDate = new Date(startDate)
-          previousStartDate.setDate(previousStartDate.getDate() - days)
-          
-          return { amount: currentAmount, growth: 0 } // Simplified for now
-        }
-
-        setServiceStats({
-          fullReplacement: calculateServiceStats('replacement'),
-          repairService: calculateServiceStats('repair'),
-          inspection: calculateServiceStats('inspection')
-        })
       } else {
         console.error('Error fetching leads:', leadsError)
         // Fallback data
         setLeads(leadsTableData)
         setLeadMetrics({ totalLeads: 5, contactedLeads: 4, bookedLeads: 2, contactRate: 80, bookingRate: 50 })
         setRevenueMetrics({ shows: 5, closes: 2, totalAmount: 33000 })
-        setServiceStats({
-          fullReplacement: { amount: 25000, growth: 15 },
-          repairService: { amount: 12000, growth: -5 },
-          inspection: { amount: 8000, growth: 8 }
-        })
       }
       
     } catch (error) {
@@ -246,11 +217,6 @@ export default function NewLeadsPage() {
       setLeads(leadsTableData)
       setLeadMetrics({ totalLeads: 5, contactedLeads: 4, bookedLeads: 2, contactRate: 80, bookingRate: 50 })
       setRevenueMetrics({ shows: 5, closes: 2, totalAmount: 33000 })
-      setServiceStats({
-        fullReplacement: { amount: 25000, growth: 15 },
-        repairService: { amount: 12000, growth: -5 },
-        inspection: { amount: 8000, growth: 8 }
-      })
     }
   }
 
@@ -283,7 +249,7 @@ export default function NewLeadsPage() {
       }
 
       // Get all lead_ids for business filtering
-      const leadIds = leadsData.map(lead => lead.lead_id)
+      const leadIds = leadsData.map((lead: any) => lead.lead_id)
 
       // Now fetch calls for these leads, grouped by assigned person
       const { data: callsData, error: callsError } = await supabase
@@ -316,11 +282,11 @@ export default function NewLeadsPage() {
       const setterLeadsMap = new Map() // setter -> Set of lead_ids they called
 
       callsData.forEach(call => {
-        const assigned = call.assigned
-        if (!setterLeadsMap.has(assigned)) {
-          setterLeadsMap.set(assigned, new Set())
+        const assignedUser = call.assigned
+        if (!setterLeadsMap.has(assignedUser)) {
+          setterLeadsMap.set(assignedUser, new Set())
         }
-        setterLeadsMap.get(assigned).add(call.lead_id)
+        setterLeadsMap.get(assignedUser).add(call.lead_id)
       })
 
       // Initialize setters data based on unique leads they called
@@ -367,7 +333,7 @@ export default function NewLeadsPage() {
 
         // Sort calls by created_at for each lead+setter combination to find first call
         callsByLeadAndSetter.forEach((calls) => {
-          calls.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          calls.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
         })
 
         // Process each call for duration and first-call speed tracking
@@ -405,14 +371,14 @@ export default function NewLeadsPage() {
         const bookingRate = setter.contactedLeads > 0 ? Math.round((setter.bookedLeads / setter.contactedLeads) * 100) : 0
         
         // Calculate total time from first call durations (working_hours = true only)
-        const totalDuration = setter.firstCallDurations.reduce((sum, duration) => sum + duration, 0)
+        const totalDuration = setter.firstCallDurations.reduce((sum: any, duration: any) => sum + duration, 0)
         const totalMinutes = Math.floor(totalDuration / 60)
         const remainingSeconds = totalDuration % 60
         const formattedCallTime = `${totalMinutes}:${remainingSeconds.toString().padStart(2, '0')}`
         
         // Calculate average speed of first calls (time_speed is in seconds, working_hours = true only)
         const avgSpeed = setter.firstCallSpeeds.length > 0 
-          ? Math.round(setter.firstCallSpeeds.reduce((sum, speed) => sum + speed, 0) / setter.firstCallSpeeds.length)
+          ? Math.round(setter.firstCallSpeeds.reduce((sum: any, speed: any) => sum + speed, 0) / setter.firstCallSpeeds.length)
           : 0
         
         const avgMinutes = Math.floor(avgSpeed / 60)
@@ -483,15 +449,9 @@ export default function NewLeadsPage() {
     }
   }, [timePeriod, user, businessData])
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
-  }
-
   const menuItems = [
     { id: "leads", icon: Users, label: "New Leads" },
     { id: "setters", icon: Phone, label: "Appointment Setters" },
-    { id: "revenue", icon: DollarSign, label: "Revenue" },
   ]
 
   if (loading) {
@@ -528,10 +488,6 @@ export default function NewLeadsPage() {
             </nav>
 
             <div className="flex-1"></div>
-
-            <button className="p-3 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-              <Settings className="w-5 h-5" />
-            </button>
           </div>
 
           {/* Main Content */}
@@ -539,36 +495,38 @@ export default function NewLeadsPage() {
             {/* Content based on active section */}
             {activeSection === "leads" && (
               <div className="space-y-8">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">New Leads</h1>
-                  <p className="text-gray-600">Manage and track your incoming leads</p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">New Leads</h1>
+                    <p className="text-gray-600">Manage and track your incoming leads</p>
+                  </div>
+                  
+                  {/* Global Date Filter */}
+                  <div className="flex flex-col items-end">
+                    <p className="text-sm text-gray-500 mb-2">Date Filter (affects all data)</p>
+                    <div className="relative">
+                      <select 
+                        value={timePeriod} 
+                        onChange={(e) => setTimePeriod(Number(e.target.value))}
+                        className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-40"
+                      >
+                        <option value={30}>Last 30 days</option>
+                        <option value={60}>Last 60 days</option>
+                        <option value={90}>Last 90 days</option>
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Lead Metrics Component */}
                   <Card className="bg-white border border-gray-200 shadow-sm">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-gray-900 flex items-center gap-2">
-                          <Users className="w-5 h-5 text-gray-600" />
-                          Lead Metrics
-                        </CardTitle>
-                      </div>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500 mb-2">Global Date Filter (affects all charts)</p>
-                        <div className="relative">
-                          <select 
-                            value={timePeriod} 
-                            onChange={(e) => setTimePeriod(Number(e.target.value))}
-                            className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
-                          >
-                            <option value={30}>Last 30 days</option>
-                            <option value={60}>Last 60 days</option>
-                            <option value={90}>Last 90 days</option>
-                          </select>
-                          <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                        </div>
-                      </div>
+                      <CardTitle className="text-gray-900 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-gray-600" />
+                        Lead Metrics
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       {/* Lead Statistics */}
@@ -646,65 +604,131 @@ export default function NewLeadsPage() {
                   </Card>
                 </div>
 
-                {/* Service Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="bg-purple-100 border border-purple-200 shadow-sm">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-purple-600 text-sm font-medium">Full Replacement</p>
-                          <p className="text-gray-600 text-xs">$ {serviceStats.fullReplacement.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mb-2">
-                            <span className="text-white text-xs font-bold">FR</span>
-                          </div>
-                          <span className={`text-sm ${serviceStats.fullReplacement.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {serviceStats.fullReplacement.growth >= 0 ? '+' : ''} {serviceStats.fullReplacement.growth}%
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-green-100 border border-green-200 shadow-sm">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-green-600 text-sm font-medium">Repair Service</p>
-                          <p className="text-gray-600 text-xs">$ {serviceStats.repairService.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mb-2">
-                            <span className="text-white text-xs font-bold">RS</span>
-                          </div>
-                          <span className={`text-sm ${serviceStats.repairService.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {serviceStats.repairService.growth >= 0 ? '+' : ''} {serviceStats.repairService.growth}%
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-yellow-100 border border-yellow-200 shadow-sm">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-yellow-600 text-sm font-medium">Inspection</p>
-                          <p className="text-gray-600 text-xs">$ {serviceStats.inspection.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mb-2">
-                            <span className="text-white text-xs font-bold">IN</span>
-                          </div>
-                          <span className={`text-sm ${serviceStats.inspection.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {serviceStats.inspection.growth >= 0 ? '+' : ''} {serviceStats.inspection.growth}%
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                {/* Recent Leads Table */}
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardHeader className="border-b border-gray-100">
+                    <CardTitle className="text-gray-900 flex items-center gap-2">Recent Leads</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-100">
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Lead Name</th>
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">How Soon</th>
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Service</th>
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Date</th>
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Speed to Lead</th>
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Grade</th>
+                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Next Step</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(leads.filter(lead => lead.start_time && lead.start_time !== '').length > 0 
+                            ? leads.filter(lead => lead.start_time && lead.start_time !== '') 
+                            : leadsTableData
+                          ).map((lead, index) => {
+                            // Helper functions for real data formatting
+                            const formatName = (lead: any) => {
+                              if (lead.customer_name) return lead.customer_name
+                              if (lead.first_name && lead.last_name) return `${lead.first_name} ${lead.last_name}`
+                              return lead.name || 'Unknown'
+                            }
+                            
+                            const formatUrgency = (lead: any) => {
+                              const urgency = lead.urgency || lead.priority || lead.how_soon || 'Not specified'
+                              let urgencyColor = "bg-gray-50 text-gray-600 border border-gray-200"
+                              
+                              if (urgency.toLowerCase().includes('asap') || urgency.toLowerCase().includes('urgent')) {
+                                urgencyColor = "bg-red-50 text-red-600 border border-red-200"
+                              } else if (urgency.toLowerCase().includes('week')) {
+                                urgencyColor = "bg-orange-50 text-orange-600 border border-orange-200"
+                              } else if (urgency.toLowerCase().includes('month')) {
+                                urgencyColor = "bg-blue-50 text-blue-600 border border-blue-200"
+                              }
+                              
+                              return { urgency, urgencyColor }
+                            }
+                            
+                            const formatService = (lead: any) => {
+                              return lead.service_type || lead.service || 'Service'
+                            }
+                            
+                            const formatDateTime = (lead: any) => {
+                              const date = lead.created_at || lead.date_time || lead.dateTime
+                              if (date) {
+                                return new Date(date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric', 
+                                  hour: 'numeric', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })
+                              }
+                              return 'N/A'
+                            }
+                            
+                            const formatSpeedToLead = (lead: any) => {
+                              const speed = lead.speed_to_lead || lead.speedToLead || '0:00'
+                              const speedNum = parseInt(speed.split(':')[0]) || 0
+                              let speedColor = "text-green-600"
+                              if (speedNum > 10) speedColor = "text-red-500"
+                              else if (speedNum > 5) speedColor = "text-orange-500"
+                              
+                              return { speed, speedColor }
+                            }
+                            
+                            const formatGrade = (lead: any) => {
+                              return lead.grade || lead.lead_grade || 'A'
+                            }
+                            
+                            const formatNextStep = (lead: any) => {
+                              return lead.next_step || lead.status || 'Contact'
+                            }
+                            
+                            const name = formatName(lead)
+                            const { urgency, urgencyColor } = formatUrgency(lead)
+                            const service = formatService(lead)
+                            const dateTime = formatDateTime(lead)
+                            const { speed, speedColor } = formatSpeedToLead(lead)
+                            const grade = formatGrade(lead)
+                            const nextStep = formatNextStep(lead)
+                            
+                            return (
+                              <tr key={lead.id || index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                <td className="py-4 px-6">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                      <span className="text-gray-600 text-xs font-bold">
+                                        {name
+                                          .split(" ")
+                                          .map((n: string) => n[0])
+                                          .join("")}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-gray-900">{name}</p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-4 px-6">
+                                  <Badge className={`${urgencyColor} text-xs`}>{urgency}</Badge>
+                                </td>
+                                <td className="py-4 px-6 text-gray-600">{service}</td>
+                                <td className="py-4 px-6 text-gray-600">{dateTime}</td>
+                                <td className={`py-4 px-6 font-bold ${speedColor}`}>{speed}</td>
+                                <td className="py-4 px-6">
+                                  <Badge className="bg-blue-50 text-blue-600 border border-blue-200 text-xs">{grade}</Badge>
+                                </td>
+                                <td className="py-4 px-6 text-gray-600">{nextStep}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
 
@@ -782,161 +806,6 @@ export default function NewLeadsPage() {
               </div>
             )}
 
-            {activeSection === "revenue" && (
-              <div className="space-y-8">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Recent Leads</h1>
-                  <p className="text-gray-600">View and manage your recent lead activity</p>
-                </div>
-
-                {/* Recent Leads Table Section - Moved from section 1 */}
-                <Card className="bg-white border border-gray-200 shadow-sm">
-                  <CardHeader className="border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-gray-900 flex items-center gap-2">Recent Leads</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="text-gray-600 bg-transparent">
-                          24h
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-gray-600 bg-transparent">
-                          Top gainers
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-100">
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Name</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">How Soon?</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Service</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">House Value</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Distance</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Date & Time</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">Speed-to-Lead</th>
-                            <th className="text-left py-4 px-6 text-gray-600 font-medium">VA</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(leads.length > 0 ? leads : leadsTableData).map((lead, index) => {
-                            // Helper functions for real data formatting
-                            const formatName = (lead: any) => {
-                              if (lead.customer_name) return lead.customer_name
-                              if (lead.first_name && lead.last_name) return `${lead.first_name} ${lead.last_name}`
-                              return lead.name || 'Unknown'
-                            }
-                            
-                            const formatUrgency = (lead: any) => {
-                              const urgency = lead.urgency || lead.priority || lead.how_soon || 'Not specified'
-                              let urgencyColor = "bg-gray-50 text-gray-600 border border-gray-200"
-                              
-                              if (urgency.toLowerCase().includes('asap') || urgency.toLowerCase().includes('urgent')) {
-                                urgencyColor = "bg-red-50 text-red-600 border border-red-200"
-                              } else if (urgency.toLowerCase().includes('week')) {
-                                urgencyColor = "bg-orange-50 text-orange-600 border border-orange-200"
-                              } else if (urgency.toLowerCase().includes('month')) {
-                                urgencyColor = "bg-blue-50 text-blue-600 border border-blue-200"
-                              }
-                              
-                              return { urgency, urgencyColor }
-                            }
-                            
-                            const formatService = (lead: any) => {
-                              return lead.service_type || lead.service || 'Service'
-                            }
-                            
-                            const formatHouseValue = (lead: any) => {
-                              const value = lead.house_value || lead.property_value || lead.estimated_value
-                              if (value) return `$${parseFloat(value).toLocaleString()}`
-                              return 'N/A'
-                            }
-                            
-                            const formatDistance = (lead: any) => {
-                              return lead.distance || 'N/A'
-                            }
-                            
-                            const formatDateTime = (lead: any) => {
-                              const date = lead.created_at || lead.date_time || lead.dateTime
-                              if (date) {
-                                return new Date(date).toLocaleDateString('en-US', { 
-                                  month: 'short', 
-                                  day: 'numeric', 
-                                  hour: 'numeric', 
-                                  minute: '2-digit',
-                                  hour12: true 
-                                })
-                              }
-                              return 'N/A'
-                            }
-                            
-                            const formatSpeedToLead = (lead: any) => {
-                              const speed = lead.speed_to_lead || lead.speedToLead || '0:00'
-                              const speedNum = parseInt(speed.split(':')[0]) || 0
-                              let speedColor = "text-green-600"
-                              if (speedNum > 10) speedColor = "text-red-500"
-                              else if (speedNum > 5) speedColor = "text-orange-500"
-                              
-                              return { speed, speedColor }
-                            }
-                            
-                            const formatVA = (lead: any) => {
-                              return lead.assigned_va || lead.va || 'Unassigned'
-                            }
-                            
-                            const name = formatName(lead)
-                            const { urgency, urgencyColor } = formatUrgency(lead)
-                            const service = formatService(lead)
-                            const houseValue = formatHouseValue(lead)
-                            const distance = formatDistance(lead)
-                            const dateTime = formatDateTime(lead)
-                            const { speed, speedColor } = formatSpeedToLead(lead)
-                            const va = formatVA(lead)
-                            
-                            return (
-                              <tr key={lead.id || index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-6">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                      <span className="text-gray-600 text-xs font-bold">
-                                        {name
-                                          .split(" ")
-                                          .map((n: string) => n[0])
-                                          .join("")}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-gray-900">{name}</p>
-                                      <p className="text-xs text-gray-500 uppercase">{service.substring(0, 4)}</p>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-4 px-6">
-                                  <Badge className={`${urgencyColor} text-xs`}>{urgency}</Badge>
-                                </td>
-                                <td className="py-4 px-6 text-gray-600">{service}</td>
-                                <td className="py-4 px-6 font-medium text-gray-900">{houseValue}</td>
-                                <td className="py-4 px-6 text-gray-600">{distance}</td>
-                                <td className="py-4 px-6 text-gray-600">{dateTime}</td>
-                                <td className={`py-4 px-6 font-bold ${speedColor}`}>{speed}</td>
-                                <td className="py-4 px-6">
-                                  <Avatar className="w-6 h-6">
-                                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                                      {va.substring(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
             </div>
           </div>
         </div>
