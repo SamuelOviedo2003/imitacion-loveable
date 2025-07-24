@@ -1,80 +1,19 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { ChevronDown } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
-interface HeaderProps {
-  user?: any
-  businessData?: any
-}
-
-export default function Header({ user, businessData }: HeaderProps) {
-  const [currentUser, setCurrentUser] = useState(user)
-  const [currentBusinessData, setCurrentBusinessData] = useState(businessData)
-  const [isLoading, setIsLoading] = useState(!user) // Loading if no user provided
+export default function Header() {
+  const { user, businessData, loading, signOut } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const router = useRouter()
 
-  const fetchBusinessData = async (userId: string) => {
-    try {
-      const { data: businessDataResult, error: businessError } = await supabase
-        .from('business_clients')
-        .select('*')
-        .limit(1)
-        .single()
-      
-      if (!businessError && businessDataResult) {
-        setCurrentBusinessData(businessDataResult)
-        return businessDataResult
-      }
-    } catch (error) {
-      console.error('Error fetching business data:', error)
-    }
-    return null
-  }
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // If we already have user and businessData passed as props, we're ready immediately
-        if (user && businessData) {
-          setCurrentUser(user)
-          setCurrentBusinessData(businessData)
-          setIsLoading(false)
-          return
-        }
-        
-        // If we have user but no businessData, just fetch business data
-        if (user && !businessData) {
-          setCurrentUser(user)
-          await fetchBusinessData(user.id)
-          setIsLoading(false)
-          return
-        }
-        
-        // Only fetch user if we don't have one
-        if (!user) {
-          setIsLoading(true)
-          const { data: { user: fetchedUser } } = await supabase.auth.getUser()
-          if (fetchedUser) {
-            setCurrentUser(fetchedUser)
-            await fetchBusinessData(fetchedUser.id)
-          }
-          setIsLoading(false)
-        }
-      } catch (error) {
-        console.error('Error in Header data fetch:', error)
-        setIsLoading(false)
-      }
-    }
-    
-    fetchData()
-  }, [user, businessData])
 
   // Handle clicking outside the dropdown to close it
   useEffect(() => {
@@ -92,8 +31,8 @@ export default function Header({ user, businessData }: HeaderProps) {
 
   const handleSignOut = async () => {
     setIsDropdownOpen(false)
-    await supabase.auth.signOut()
-    window.location.href = '/'
+    await signOut()
+    router.push('/')
   }
 
   const isActive = (path: string) => {
@@ -106,10 +45,10 @@ export default function Header({ user, businessData }: HeaderProps) {
         <header className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center">
             <Link href="/home">
-              {!isLoading && (
+              {!loading && (
                 <img
-                  src={currentBusinessData && currentBusinessData.avatar_url ? currentBusinessData.avatar_url : "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-VM83AopODeRbWG1Ol4Eblk7MP7Qaka.png"}
-                  alt={currentBusinessData && currentBusinessData.company_name ? `${currentBusinessData.company_name} Logo` : "Company Logo"}
+                  src={businessData && businessData.avatar_url ? businessData.avatar_url : "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-VM83AopODeRbWG1Ol4Eblk7MP7Qaka.png"}
+                  alt={businessData && businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
                   className="h-12 w-auto bg-white rounded px-1 cursor-pointer"
                   style={{
                     filter: "drop-shadow(0 0 0 white)",
@@ -117,7 +56,7 @@ export default function Header({ user, businessData }: HeaderProps) {
                   }}
                 />
               )}
-              {isLoading && (
+              {loading && (
                 <div className="h-12 w-12 bg-gray-200 rounded animate-pulse"></div>
               )}
             </Link>
@@ -175,7 +114,7 @@ export default function Header({ user, businessData }: HeaderProps) {
           </nav>
 
           <div className="flex items-center space-x-4">
-            {currentUser && (
+            {user && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -184,7 +123,7 @@ export default function Header({ user, businessData }: HeaderProps) {
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
                     <div className="w-full h-full bg-blue-100 flex items-center justify-center">
                       <span className="text-blue-600 text-sm font-bold">
-                        {currentUser?.email?.charAt(0).toUpperCase() || 'U'}
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
                   </div>
@@ -195,7 +134,7 @@ export default function Header({ user, businessData }: HeaderProps) {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-sm font-medium text-gray-900 truncate">
-                        {currentUser?.email}
+                        {user?.email}
                       </p>
                     </div>
                     <button
@@ -209,7 +148,7 @@ export default function Header({ user, businessData }: HeaderProps) {
               </div>
             )}
             
-            {!currentUser && !isLoading && (
+            {!user && !loading && (
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
                 <img src="/placeholder.svg?height=40&width=40" alt="Profile" className="w-full h-full object-cover" />
               </div>

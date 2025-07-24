@@ -1,16 +1,12 @@
 import { ArrowRight, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import Header from "@/components/Header"
+import ProtectedLayout from "@/components/ProtectedLayout"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative" style={{ backgroundColor: "#E8F4F8" }}>
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
-      <div className="relative z-10">
-        <Header />
-
-        {/* Main Content */}
-        <main className="container mx-auto px-6 py-12">
+    <ProtectedLayout>
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-12">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <div className="space-y-8">
@@ -62,7 +58,6 @@ export default function HomePage() {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+    </ProtectedLayout>
   )
 }

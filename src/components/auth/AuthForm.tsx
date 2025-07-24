@@ -2,20 +2,33 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { supabase } from '@/lib/supabase'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthForm() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [isSignUp, setIsSignUp] = useState(false)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+
+  // Redirect to home if user is already authenticated
+  useEffect(() => {
+    console.log('AuthForm useEffect - authLoading:', authLoading, 'user:', user?.email)
+    if (!authLoading && user) {
+      console.log('Redirecting to /home')
+      router.push('/home')
+    }
+  }, [user, authLoading, router])
   
   const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -56,13 +69,49 @@ export function AuthForm() {
         })
         if (error) throw error
         
-        // Wait for the session to be established before redirecting
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          window.location.href = '/home'
-        } else {
-          throw new Error('Authentication failed - no session established')
+        setMessage('Signing you in...')
+        
+        // Wait for the session to be established and then redirect
+        let retries = 0
+        const maxRetries = 10
+        
+        const checkSessionAndRedirect = async () => {
+          const { data: { session } } = await supabase.auth.getSession()
+          
+          if (session?.user) {
+            console.log('Session confirmed, redirecting to /home')
+            try {
+              await router.push('/home')
+              console.log('Router.push completed')
+            } catch (error) {
+              console.error('Router.push failed:', error)
+            }
+            return
+          }
+          
+          retries++
+          if (retries < maxRetries) {
+            setTimeout(checkSessionAndRedirect, 200)
+          } else {
+            setMessage('Sign-in successful! Redirecting...')
+            // Force redirect even if session check fails
+            setTimeout(() => router.push('/home'), 500)
+          }
         }
+        
+        // Start checking for session
+        setTimeout(checkSessionAndRedirect, 100)
+        
+        // Also set up a backup redirect after 3 seconds regardless
+        setTimeout(() => {
+          console.log('Backup redirect triggered after 3 seconds')
+          try {
+            router.push('/home')
+          } catch (error) {
+            console.error('Router.push backup failed, using window.location:', error)
+            window.location.href = '/home'
+          }
+        }, 3000)
       }
     } catch (error: any) {
       setMessage(error.message)
