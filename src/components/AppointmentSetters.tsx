@@ -11,11 +11,6 @@ interface AppointmentSettersProps {
 export default function AppointmentSetters({ appointmentSetters }: AppointmentSettersProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Appointment Setters</h1>
-        <p className="text-gray-600">Performance metrics for your appointment setters</p>
-      </div>
-      
       {appointmentSetters.length > 0 ? (
         <div className="grid gap-6">
           {appointmentSetters.map((setter, index) => (

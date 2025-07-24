@@ -79,7 +79,7 @@ export default function Header({ user, businessData }: HeaderProps) {
   return (
     <div className="container mx-auto px-6 pt-6">
       <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg">
-        <header className="flex items-center justify-between px-8 py-4">
+        <header className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center">
             <Link href="/home">
               {!isLoading && (
@@ -115,6 +115,14 @@ export default function Header({ user, businessData }: HeaderProps) {
               }`}
             >
               New Leads
+            </Link>
+            <Link
+              href="/appointment-setters"
+              className={`transition-colors text-sm font-medium ${
+                isActive('/appointment-setters') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+              }`}
+            >
+              Appointment Setters
             </Link>
             <Link 
               href="/incoming-calls" 

@@ -4,13 +4,11 @@ import { useState, useEffect } from "react"
 import { ChevronDown } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import Header from "@/components/Header"
-import LeadMetrics from "@/components/LeadMetrics"
-import RevenueMetrics from "@/components/RevenueMetrics"
-import LeadsTable from "@/components/LeadsTable"
+import AppointmentSetters from "@/components/AppointmentSetters"
 import { useBusinessData } from "@/hooks/useBusinessData"
 import { useMetrics } from "@/hooks/useMetrics"
 
-export default function NewLeadsPage() {
+export default function AppointmentSettersPage() {
   const [user, setUser] = useState<any>(null)
   const [timePeriod, setTimePeriod] = useState(30)
   const [loading, setLoading] = useState(true)
@@ -19,9 +17,7 @@ export default function NewLeadsPage() {
   const businessId = businessData?.business_id
   
   const {
-    leads,
-    leadMetrics,
-    revenueMetrics,
+    appointmentSetters,
     loading: metricsLoading
   } = useMetrics(timePeriod, businessId)
 
@@ -56,8 +52,8 @@ export default function NewLeadsPage() {
           <div className="space-y-8">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">New Leads</h1>
-                <p className="text-gray-600">Manage and track your incoming leads</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Appointment Setters</h1>
+                <p className="text-gray-600">Performance metrics for your appointment setters</p>
               </div>
               
               {/* Date Filter */}
@@ -78,12 +74,7 @@ export default function NewLeadsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <LeadMetrics leadMetrics={leadMetrics} />
-              <RevenueMetrics revenueMetrics={revenueMetrics} />
-            </div>
-
-            <LeadsTable leads={leads} />
+            <AppointmentSetters appointmentSetters={appointmentSetters} />
           </div>
         </div>
       </div>
