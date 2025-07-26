@@ -13,12 +13,18 @@
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@supabase/supabase-js": "^2.52.0",
+    "@types/d3": "^7.4.3",
+    "@types/d3-sankey": "^0.12.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
+    "dotenv": "^17.2.1",
     "lucide-react": "^0.300.0",
     "next": "14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "recharts": "^3.1.0",
     "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
