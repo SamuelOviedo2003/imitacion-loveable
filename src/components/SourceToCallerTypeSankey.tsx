@@ -77,7 +77,7 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
     const sankeyLayout = sankey<{}, {}>()
       .nodeId((d: any) => d.id)
       .nodeWidth(20)
-      .nodePadding(20)
+      .nodePadding(15)
       .extent([[0, 0], [width, height]])
 
     const graph = sankeyLayout(sankeyData)
@@ -140,19 +140,39 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
         setTooltip(prev => ({ ...prev, visible: false }))
       })
 
-    // Add node labels outside the rectangles
+    // Add node labels outside the rectangles - ensure all nodes get labels
     node.append("text")
       .attr("x", (d: any) => d.x0 < width / 2 ? -10 : (d.x1 - d.x0) + 10)
       .attr("y", (d: any) => (d.y1 + d.y0) / 2)
       .attr("dy", "0.35em")
       .attr("text-anchor", (d: any) => d.x0 < width / 2 ? "end" : "start")
-      .style("font-size", "13px")
+      .style("font-size", (d: any) => {
+        // Scale font size based on node height, but ensure minimum readability
+        const nodeHeight = d.y1 - d.y0
+        if (nodeHeight < 20) return "10px"
+        if (nodeHeight < 30) return "11px"
+        return "13px"
+      })
       .style("font-weight", "500")
       .style("fill", "#374151")
       .style("pointer-events", "none")
-      .text((d: any) => {
+      .each(function(d: any) {
         const text = d.name || d.id
-        return text.length > 15 ? text.substring(0, 13) + '...' : text
+        const element = d3.select(this)
+        
+        // For smaller nodes, use shorter text
+        const nodeHeight = d.y1 - d.y0
+        let displayText = text
+        
+        if (nodeHeight < 20 && text.length > 8) {
+          displayText = text.substring(0, 6) + '...'
+        } else if (nodeHeight < 30 && text.length > 12) {
+          displayText = text.substring(0, 10) + '...'
+        } else if (text.length > 15) {
+          displayText = text.substring(0, 13) + '...'
+        }
+        
+        element.text(displayText)
       })
 
   }, [data, loading])
@@ -193,8 +213,8 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
         <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full overflow-x-auto">
-          <svg ref={svgRef} className="w-full" />
+        <div className="relative w-full overflow-x-auto flex justify-center">
+          <svg ref={svgRef} />
           {tooltip.visible && (
             <div
               className="fixed bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-sm font-medium text-gray-900 z-50 pointer-events-none"
