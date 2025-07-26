@@ -26,10 +26,7 @@ const formatDuration = (duration?: number) => {
   const minutes = Math.floor(duration / 60)
   const seconds = duration % 60
   
-  if (minutes > 0) {
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
-  return `${seconds}s`
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
 const getStatusBadgeStyle = (status?: string) => {

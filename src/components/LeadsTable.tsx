@@ -62,9 +62,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   
-  const displayLeads = leads.filter(lead => lead.start_time && lead.start_time !== '').length > 0 
-    ? leads.filter(lead => lead.start_time && lead.start_time !== '') 
-    : leadsTableData
+  const displayLeads = leads.length > 0 ? leads : leadsTableData
 
   const handleRowClick = (lead: any) => {
     setSelectedLead(lead)
