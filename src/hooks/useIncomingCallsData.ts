@@ -29,25 +29,55 @@ export interface ChartData {
   color?: string
 }
 
+export interface SankeyNode {
+  id: string
+  name: string
+}
+
 export interface SankeyLink {
   source: string
   target: string
   value: number
 }
 
+export interface SankeyData {
+  nodes: SankeyNode[]
+  links: SankeyLink[]
+}
+
 export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) => {
   const [calls, setCalls] = useState<IncomingCall[]>([])
   const [sourceData, setSourceData] = useState<ChartData[]>([])
   const [callerTypeData, setCallerTypeData] = useState<ChartData[]>([])
-  const [sankeyData, setSankeyData] = useState<SankeyLink[]>([])
+  const [sankeyData, setSankeyData] = useState<SankeyData>({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const generateVibrantColors = (count: number): string[] => {
+    const colors = [
+      '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+      '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+    ]
+    
+    if (count <= colors.length) {
+      return colors.slice(0, count)
+    }
+    
+    // Generate additional colors if needed
+    const additionalColors = []
+    for (let i = 0; i < count - colors.length; i++) {
+      const hue = (360 / (count - colors.length)) * i
+      additionalColors.push(`hsl(${hue}, 70%, 50%)`)
+    }
+    
+    return [...colors, ...additionalColors]
+  }
 
   const processData = (callsData: IncomingCall[]) => {
     if (callsData.length === 0) {
       setSourceData([])
       setCallerTypeData([])
-      setSankeyData([])
+      setSankeyData({ nodes: [], links: [] })
       return
     }
 
@@ -60,11 +90,13 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
       return acc
     }, {} as Record<string, number>)
 
+    const sourceColors = generateVibrantColors(Object.keys(sourceCounts).length)
     const sourceChartData = Object.entries(sourceCounts)
-      .map(([name, value]) => ({
+      .map(([name, value], index) => ({
         name,
         value,
-        percentage: Math.round((value / totalCalls) * 100)
+        percentage: Math.round((value / totalCalls) * 100),
+        color: sourceColors[index]
       }))
       .sort((a, b) => b.value - a.value)
 
@@ -77,11 +109,13 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
       return acc
     }, {} as Record<string, number>)
 
+    const callerTypeColors = generateVibrantColors(Object.keys(callerTypeCounts).length)
     const callerTypeChartData = Object.entries(callerTypeCounts)
-      .map(([name, value]) => ({
+      .map(([name, value], index) => ({
         name,
         value,
-        percentage: Math.round((value / totalCalls) * 100)
+        percentage: Math.round((value / totalCalls) * 100),
+        color: callerTypeColors[index]
       }))
       .sort((a, b) => b.value - a.value)
 
@@ -96,14 +130,23 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
       return acc
     }, {} as Record<string, number>)
 
-    const sankeyLinks = Object.entries(relationships)
+    // Create unique nodes for sources and caller types
+    const uniqueSources = new Set(callsData.map(call => call.source?.trim() || 'Unknown'))
+    const sourceNodes = Array.from(uniqueSources).map(source => ({ id: source, name: source }))
+    
+    const uniqueCallerTypes = new Set(callsData.map(call => call.caller_type?.trim() || 'Unknown'))
+    const callerTypeNodes = Array.from(uniqueCallerTypes).map(callerType => ({ id: callerType, name: callerType }))
+
+    const nodes = [...sourceNodes, ...callerTypeNodes]
+
+    const links = Object.entries(relationships)
       .map(([key, value]) => {
         const [source, target] = key.split('→')
         return { source, target, value }
       })
       .sort((a, b) => b.value - a.value)
 
-    setSankeyData(sankeyLinks)
+    setSankeyData({ nodes, links })
   }
 
   const fetchData = async () => {

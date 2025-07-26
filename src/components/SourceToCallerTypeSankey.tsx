@@ -1,200 +1,216 @@
 "use client"
 
+import { useEffect, useRef, useState } from 'react'
+import * as d3 from 'd3'
+import { sankey, sankeyLinkHorizontal, SankeyGraph, SankeyNode, SankeyLink } from 'd3-sankey'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SankeyLink } from "@/hooks/useIncomingCallsData"
-import { useState } from "react"
+import { SankeyData } from '@/hooks/useIncomingCallsData'
 
 interface SourceToCallerTypeSankeyProps {
-  data: SankeyLink[]
-  loading?: boolean
+  data: SankeyData
+  loading: boolean
 }
 
-// App theme colors with subtle gradients
-const COLORS = [
-  { base: '#3b82f6', gradient: 'from-blue-400 to-blue-600' },    // Blue
-  { base: '#10b981', gradient: 'from-emerald-400 to-emerald-600' }, // Emerald
-  { base: '#f59e0b', gradient: 'from-amber-400 to-amber-600' },    // Amber
-  { base: '#ef4444', gradient: 'from-red-400 to-red-600' },       // Red
-  { base: '#8b5cf6', gradient: 'from-violet-400 to-violet-600' },  // Violet
-  { base: '#06b6d4', gradient: 'from-cyan-400 to-cyan-600' },     // Cyan
-  { base: '#84cc16', gradient: 'from-lime-400 to-lime-600' },     // Lime
-  { base: '#f97316', gradient: 'from-orange-400 to-orange-600' }, // Orange
-  { base: '#ec4899', gradient: 'from-pink-400 to-pink-600' },     // Pink
-  { base: '#6b7280', gradient: 'from-gray-400 to-gray-600' }      // Gray
-]
+interface D3SankeyNode extends SankeyNode<{}, {}> {
+  id?: string
+  name?: string
+  x0?: number
+  x1?: number
+  y0?: number
+  y1?: number
+}
+
+interface D3SankeyLink extends SankeyLink<{}, {}> {
+  source: any
+  target: any
+  value: number
+  y0?: number
+  y1?: number
+  width?: number
+}
 
 export default function SourceToCallerTypeSankey({ data, loading }: SourceToCallerTypeSankeyProps) {
-  const [hoveredConnection, setHoveredConnection] = useState<string | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean
+    x: number
+    y: number
+    content: string
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    content: ''
+  })
+
+  useEffect(() => {
+    if (!data.nodes.length || !data.links.length || loading) return
+
+    const svg = d3.select(svgRef.current)
+    svg.selectAll("*").remove()
+
+    const margin = { top: 30, right: 120, bottom: 30, left: 120 }
+    const width = 800 - margin.left - margin.right
+    const height = 450 - margin.top - margin.bottom
+
+    const g = svg
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`)
+
+    // Create color scale
+    const colorScale = d3.scaleOrdinal()
+      .domain(data.nodes.map(d => d.id))
+      .range([
+        '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+        '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+      ])
+
+    // Prepare data for d3-sankey
+    const sankeyData: SankeyGraph<{}, {}> = {
+      nodes: data.nodes.map(d => ({ ...d } as any)),
+      links: data.links.map(d => ({ ...d } as any))
+    }
+
+    // Create sankey layout
+    const sankeyLayout = sankey<{}, {}>()
+      .nodeId((d: any) => d.id)
+      .nodeWidth(20)
+      .nodePadding(20)
+      .extent([[0, 0], [width, height]])
+
+    const graph = sankeyLayout(sankeyData)
+
+    // Draw links
+    const link = g.append("g")
+      .selectAll(".link")
+      .data(graph.links)
+      .enter().append("path")
+      .attr("class", "link")
+      .attr("d", sankeyLinkHorizontal())
+      .style("stroke", (d: any) => {
+        const sourceColor = colorScale(d.source.id) as string
+        return d3.color(sourceColor)?.copy({ opacity: 0.3 }).toString() || '#ddd'
+      })
+      .style("stroke-width", (d: any) => Math.max(1, d.width))
+      .style("fill", "none")
+      .style("cursor", "pointer")
+      .on("mouseover", function(event, d: any) {
+        d3.select(this).style("stroke-opacity", 0.8)
+        setTooltip({
+          visible: true,
+          x: event.pageX + 10,
+          y: event.pageY - 10,
+          content: `${d.source.name} → ${d.target.name}: ${d.value} calls`
+        })
+      })
+      .on("mouseout", function(event, d: any) {
+        d3.select(this).style("stroke-opacity", 0.3)
+        setTooltip(prev => ({ ...prev, visible: false }))
+      })
+
+    // Draw nodes
+    const node = g.append("g")
+      .selectAll(".node")
+      .data(graph.nodes)
+      .enter().append("g")
+      .attr("class", "node")
+      .attr("transform", (d: any) => `translate(${d.x0},${d.y0})`)
+
+    // Add node rectangles
+    node.append("rect")
+      .attr("height", (d: any) => d.y1 - d.y0)
+      .attr("width", (d: any) => d.x1 - d.x0)
+      .style("fill", (d: any) => colorScale(d.id) as string)
+      .style("stroke", "#000")
+      .style("stroke-width", 1)
+      .style("cursor", "pointer")
+      .on("mouseover", function(event, d: any) {
+        const totalValue = d.sourceLinks?.reduce((sum: number, l: any) => sum + l.value, 0) || 
+                          d.targetLinks?.reduce((sum: number, l: any) => sum + l.value, 0) || 0
+        setTooltip({
+          visible: true,
+          x: event.pageX + 10,
+          y: event.pageY - 10,
+          content: `${d.name}: ${totalValue} calls`
+        })
+      })
+      .on("mouseout", function() {
+        setTooltip(prev => ({ ...prev, visible: false }))
+      })
+
+    // Add node labels outside the rectangles
+    node.append("text")
+      .attr("x", (d: any) => d.x0 < width / 2 ? -10 : (d.x1 - d.x0) + 10)
+      .attr("y", (d: any) => (d.y1 + d.y0) / 2)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", (d: any) => d.x0 < width / 2 ? "end" : "start")
+      .style("font-size", "13px")
+      .style("font-weight", "500")
+      .style("fill", "#374151")
+      .style("pointer-events", "none")
+      .text((d: any) => {
+        const text = d.name || d.id
+        return text.length > 15 ? text.substring(0, 13) + '...' : text
+      })
+
+  }, [data, loading])
 
   if (loading) {
     return (
-      <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-gray-900">Source to Caller Type Relationship</CardTitle>
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-96">
-            <div className="text-gray-500 animate-pulse">Loading diagram...</div>
+          <div className="flex items-center justify-center h-[500px]">
+            <div className="animate-pulse text-gray-500">Loading diagram...</div>
           </div>
         </CardContent>
       </Card>
     )
   }
 
-  if (data.length === 0) {
+  if (!data.nodes.length || !data.links.length) {
     return (
-      <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-gray-900">Source to Caller Type Relationship</CardTitle>
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-96 text-gray-500">
-            <div className="text-center">
-              <div className="text-lg font-medium mb-1">No data available</div>
-              <div className="text-sm">No calls found for the selected period</div>
-            </div>
+          <div className="flex items-center justify-center h-[500px]">
+            <div className="text-gray-500">No relationship data available</div>
           </div>
         </CardContent>
       </Card>
     )
   }
-
-  // Extract unique sources and caller types
-  const sources = Array.from(new Set(data.map(link => link.source)))
-  const callerTypes = Array.from(new Set(data.map(link => link.target)))
-  
-  // Calculate totals for proportional sizing
-  const maxValue = Math.max(...data.map(link => link.value))
-  const totalCalls = data.reduce((sum, link) => sum + link.value, 0)
-
-  // Calculate totals per source and caller type for node sizing
-  const sourceTotals = sources.reduce((acc, source) => {
-    acc[source] = data.filter(link => link.source === source).reduce((sum, link) => sum + link.value, 0)
-    return acc
-  }, {} as Record<string, number>)
-
-  const callerTypeTotals = callerTypes.reduce((acc, callerType) => {
-    acc[callerType] = data.filter(link => link.target === callerType).reduce((sum, link) => sum + link.value, 0)
-    return acc
-  }, {} as Record<string, number>)
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-gray-900">Source to Caller Type Relationship</CardTitle>
-        <p className="text-sm text-gray-600 mt-1">
-          Flow of calls from sources to caller types • {totalCalls} total connections
-        </p>
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-start justify-between gap-12 p-6 min-h-96">
-          {/* Sources Column */}
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-gray-700 mb-6 text-center">Sources</h3>
-            <div className="space-y-4">
-              {sources.map((source, index) => {
-                const total = sourceTotals[source]
-                const height = Math.max(50, (total / maxValue) * 150)
-                const colorInfo = COLORS[index % COLORS.length]
-                
-                return (
-                  <div 
-                    key={source}
-                    className="group relative"
-                  >
-                    <div 
-                      className={`rounded-xl flex items-center justify-center text-white text-sm font-semibold transition-all duration-300 cursor-pointer bg-gradient-to-r ${colorInfo.gradient} hover:scale-105 hover:shadow-lg`}
-                      style={{ height: `${height}px` }}
-                      onMouseEnter={() => setHoveredConnection(source)}
-                      onMouseLeave={() => setHoveredConnection(null)}
-                    >
-                      <span className="px-4 text-center leading-tight">{source}</span>
-                    </div>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute left-full ml-3 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20 shadow-lg">
-                      <div className="font-medium">{source}</div>
-                      <div>{total} calls</div>
-                    </div>
-                  </div>
-                )
-              })}
+        <div className="relative w-full overflow-x-auto">
+          <svg ref={svgRef} className="w-full" />
+          {tooltip.visible && (
+            <div
+              className="fixed bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-sm font-medium text-gray-900 z-50 pointer-events-none"
+              style={{
+                left: tooltip.x,
+                top: tooltip.y,
+                transform: 'translateX(-50%)'
+              }}
+            >
+              {tooltip.content}
             </div>
-          </div>
-
-          {/* Connections Visualization */}
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <h3 className="text-sm font-semibold text-gray-700 mb-6">Top Connections</h3>
-            <div className="space-y-3 w-full max-w-sm">
-              {data
-                .sort((a, b) => b.value - a.value)
-                .slice(0, 8) // Show top 8 connections
-                .map((link, index) => {
-                  const width = Math.max(30, (link.value / maxValue) * 180)
-                  const isHovered = hoveredConnection === link.source || hoveredConnection === link.target
-                  const colorInfo = COLORS[index % COLORS.length]
-                  
-                  return (
-                    <div 
-                      key={`${link.source}-${link.target}`}
-                      className={`group relative mx-auto rounded-full transition-all duration-300 cursor-pointer bg-gradient-to-r ${colorInfo.gradient} hover:shadow-lg ${isHovered ? 'scale-105 shadow-lg' : ''}`}
-                      style={{ 
-                        width: `${width}px`,
-                        height: '24px'
-                      }}
-                      onMouseEnter={() => setHoveredConnection(`${link.source}-${link.target}`)}
-                      onMouseLeave={() => setHoveredConnection(null)}
-                    >
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-white text-xs font-bold">{link.value}</span>
-                      </div>
-                      
-                      {/* Connection Tooltip */}
-                      <div className="absolute left-1/2 transform -translate-x-1/2 -top-12 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20 shadow-lg">
-                        <div className="text-center">
-                          <div className="font-medium">{link.source} → {link.target}</div>
-                          <div>{link.value} calls ({Math.round((link.value / totalCalls) * 100)}%)</div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          </div>
-
-          {/* Caller Types Column */}
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-gray-700 mb-6 text-center">Caller Types</h3>
-            <div className="space-y-4">
-              {callerTypes.map((callerType, index) => {
-                const total = callerTypeTotals[callerType]
-                const height = Math.max(50, (total / maxValue) * 150)
-                const colorInfo = COLORS[(index + sources.length) % COLORS.length]
-                
-                return (
-                  <div 
-                    key={callerType}
-                    className="group relative"
-                  >
-                    <div 
-                      className={`rounded-xl flex items-center justify-center text-white text-sm font-semibold transition-all duration-300 cursor-pointer bg-gradient-to-r ${colorInfo.gradient} hover:scale-105 hover:shadow-lg`}
-                      style={{ height: `${height}px` }}
-                      onMouseEnter={() => setHoveredConnection(callerType)}
-                      onMouseLeave={() => setHoveredConnection(null)}
-                    >
-                      <span className="px-4 text-center leading-tight">{callerType}</span>
-                    </div>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute right-full mr-3 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20 shadow-lg">
-                      <div className="font-medium">{callerType}</div>
-                      <div>{total} calls</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          )}
+        </div>
+        <div className="mt-4 text-sm text-gray-600">
+          <p>This diagram shows the relationship between call sources (left) and caller types (right). 
+          The width of each flow represents the number of calls.</p>
         </div>
       </CardContent>
     </Card>

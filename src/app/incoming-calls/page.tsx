@@ -69,35 +69,6 @@ export default function IncomingCallsPage() {
             </div>
           )}
 
-          {/* Summary Stats */}
-          {!error && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500">Total Calls</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {loading ? '...' : calls.length.toLocaleString()}
-                </p>
-              </div>
-              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500">Unique Sources</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {loading ? '...' : sourceData.length}
-                </p>
-              </div>
-              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500">Caller Types</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {loading ? '...' : callerTypeData.length}
-                </p>
-              </div>
-              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500">With Recording</h3>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {loading ? '...' : calls.filter(call => call.recording_url).length}
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Charts Grid */}
           {!error && (
@@ -116,6 +87,7 @@ export default function IncomingCallsPage() {
           {!error && (
             <RecentIncomingCallsTable calls={calls} loading={loading} />
           )}
+
         </div>
       </div>
     </ProtectedLayout>
