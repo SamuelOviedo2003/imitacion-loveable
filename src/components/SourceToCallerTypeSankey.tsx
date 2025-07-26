@@ -93,21 +93,32 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
         const sourceColor = colorScale(d.source.id) as string
         return d3.color(sourceColor)?.copy({ opacity: 0.3 }).toString() || '#ddd'
       })
-      .style("stroke-width", (d: any) => Math.max(1, d.width))
+      .style("stroke-width", (d: any) => Math.max(2, d.width)) // Minimum 2px for visibility
       .style("fill", "none")
       .style("cursor", "pointer")
+      .style("stroke-opacity", 0.4) // Slightly higher default opacity
       .on("mouseover", function(event, d: any) {
-        d3.select(this).style("stroke-opacity", 0.8)
+        // Enhanced link hover effects
+        d3.select(this)
+          .style("stroke-opacity", 0.9)
+          .style("stroke-width", (d: any) => Math.max(4, d.width + 2)) // Thicker on hover
+        
         setTooltip({
           visible: true,
           x: event.pageX + 10,
           y: event.pageY - 10,
-          content: `${d.source.name} → ${d.target.name}: ${d.value} calls`
+          content: `${d.source.name || d.source.id} → ${d.target.name || d.target.id}: ${d.value} calls (${Math.round((d.value / data.links.reduce((sum, l) => sum + l.value, 0)) * 100)}%)`
         })
       })
       .on("mouseout", function(event, d: any) {
-        d3.select(this).style("stroke-opacity", 0.3)
+        d3.select(this)
+          .style("stroke-opacity", 0.4)
+          .style("stroke-width", (d: any) => Math.max(2, d.width))
         setTooltip(prev => ({ ...prev, visible: false }))
+      })
+      .on("click", function(event, d: any) {
+        // Optional: Add click functionality for deeper exploration
+        console.log(`Clicked link: ${d.source.name} → ${d.target.name}`, d)
       })
 
     // Draw nodes
@@ -127,52 +138,75 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
       .style("stroke-width", 1)
       .style("cursor", "pointer")
       .on("mouseover", function(event, d: any) {
+        // Enhanced node hover with highlight effect
+        d3.select(this)
+          .style("fill", (d: any) => {
+            const originalColor = colorScale(d.id) as string
+            return d3.color(originalColor)?.brighter(0.3).toString() || originalColor
+          })
+          .style("stroke", "#1f2937")
+          .style("stroke-width", 2)
+        
         const totalValue = d.sourceLinks?.reduce((sum: number, l: any) => sum + l.value, 0) || 
                           d.targetLinks?.reduce((sum: number, l: any) => sum + l.value, 0) || 0
+        
+        const isSource = d.x0 < width / 2
+        const nodeType = isSource ? "Source" : "Caller Type"
+        
         setTooltip({
           visible: true,
           x: event.pageX + 10,
           y: event.pageY - 10,
-          content: `${d.name}: ${totalValue} calls`
+          content: `${nodeType}: ${d.name || d.id}\nTotal calls: ${totalValue}\nConnections: ${(d.sourceLinks?.length || 0) + (d.targetLinks?.length || 0)}`
         })
       })
-      .on("mouseout", function() {
+      .on("mouseout", function(event, d: any) {
+        d3.select(this)
+          .style("fill", (d: any) => colorScale(d.id) as string)
+          .style("stroke", "#000")
+          .style("stroke-width", 1)
         setTooltip(prev => ({ ...prev, visible: false }))
       })
+      .on("click", function(event, d: any) {
+        // Optional: Add click functionality for node exploration
+        console.log(`Clicked node: ${d.name}`, d)
+      })
 
-    // Add node labels outside the rectangles - ensure all nodes get labels
+    // Add node labels - FORCE all nodes to have visible labels
     node.append("text")
-      .attr("x", (d: any) => d.x0 < width / 2 ? -10 : (d.x1 - d.x0) + 10)
+      .attr("x", (d: any) => {
+        // Position labels outside nodes with more generous spacing
+        return d.x0 < width / 2 ? -15 : (d.x1 - d.x0) + 15
+      })
       .attr("y", (d: any) => (d.y1 + d.y0) / 2)
       .attr("dy", "0.35em")
       .attr("text-anchor", (d: any) => d.x0 < width / 2 ? "end" : "start")
       .style("font-size", (d: any) => {
-        // Scale font size based on node height, but ensure minimum readability
+        // Ensure minimum font size for visibility - NEVER go below 9px
         const nodeHeight = d.y1 - d.y0
-        if (nodeHeight < 20) return "10px"
-        if (nodeHeight < 30) return "11px"
-        return "13px"
+        if (nodeHeight < 15) return "9px"  // Minimum readable size
+        if (nodeHeight < 25) return "10px"
+        if (nodeHeight < 35) return "11px"
+        return "12px"
       })
-      .style("font-weight", "500")
-      .style("fill", "#374151")
-      .style("pointer-events", "none")
-      .each(function(d: any) {
-        const text = d.name || d.id
-        const element = d3.select(this)
-        
-        // For smaller nodes, use shorter text
+      .style("font-weight", "600") // Slightly bolder for better visibility
+      .style("fill", "#1f2937") // Darker color for better contrast
+      .style("pointer-events", "none") // Labels don't interfere with node interactions
+      .style("opacity", 1) // Force full opacity
+      .text((d: any) => {
+        const text = d.name || d.id || 'Unknown'
         const nodeHeight = d.y1 - d.y0
-        let displayText = text
         
-        if (nodeHeight < 20 && text.length > 8) {
-          displayText = text.substring(0, 6) + '...'
-        } else if (nodeHeight < 30 && text.length > 12) {
-          displayText = text.substring(0, 10) + '...'
-        } else if (text.length > 15) {
-          displayText = text.substring(0, 13) + '...'
+        // Aggressive text shortening for very small nodes, but always show SOMETHING
+        if (nodeHeight < 15) {
+          return text.length > 4 ? text.substring(0, 3) + '.' : text
+        } else if (nodeHeight < 25) {
+          return text.length > 8 ? text.substring(0, 6) + '..' : text
+        } else if (nodeHeight < 35) {
+          return text.length > 12 ? text.substring(0, 10) + '..' : text
+        } else {
+          return text.length > 15 ? text.substring(0, 13) + '..' : text
         }
-        
-        element.text(displayText)
       })
 
   }, [data, loading])
@@ -217,11 +251,12 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
           <svg ref={svgRef} />
           {tooltip.visible && (
             <div
-              className="fixed bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-sm font-medium text-gray-900 z-50 pointer-events-none"
+              className="fixed bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-sm font-medium text-gray-900 z-50 pointer-events-none whitespace-pre-line"
               style={{
                 left: tooltip.x,
                 top: tooltip.y,
-                transform: 'translateX(-50%)'
+                transform: 'translateX(-50%)',
+                maxWidth: '250px'
               }}
             >
               {tooltip.content}
