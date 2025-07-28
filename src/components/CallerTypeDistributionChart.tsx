@@ -82,16 +82,16 @@ export default function CallerTypeDistributionChart({ data, loading }: CallerTyp
       <CardHeader>
         <CardTitle className="text-gray-900">Caller Type Distribution</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="w-full h-96">
+      <CardContent className="pb-4">
+        <div className="w-full h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
-                innerRadius={40}
+                outerRadius={120}
+                innerRadius={60}
                 fill="#8884d8"
                 dataKey="value"
                 label={renderCustomizedLabel}

@@ -78,14 +78,14 @@ export default function IncomingCallsPage() {
             </div>
           )}
 
-          {/* Sankey Diagram - Full Width */}
-          {!error && (
-            <SourceToCallerTypeSankey data={sankeyData} loading={loading} />
-          )}
-
           {/* Recent Incoming Calls Table */}
           {!error && (
             <RecentIncomingCallsTable calls={calls} loading={loading} />
+          )}
+
+          {/* Sankey Diagram - Full Width */}
+          {!error && (
+            <SourceToCallerTypeSankey data={sankeyData} loading={loading} />
           )}
 
         </div>

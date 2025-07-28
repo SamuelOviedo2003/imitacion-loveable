@@ -102,39 +102,54 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
 
     setSourceData(sourceChartData)
 
-    // Process caller type distribution
+    // Process caller type distribution (excluding Unknown/null values)
     const callerTypeCounts = callsData.reduce((acc, call) => {
-      const callerType = call.caller_type?.trim() || 'Unknown'
-      acc[callerType] = (acc[callerType] || 0) + 1
+      const callerType = call.caller_type?.trim()
+      if (callerType && callerType !== 'Unknown') {
+        acc[callerType] = (acc[callerType] || 0) + 1
+      }
       return acc
     }, {} as Record<string, number>)
 
+    const validCallerTypeCalls = Object.values(callerTypeCounts).reduce((sum, count) => sum + count, 0)
     const callerTypeColors = generateVibrantColors(Object.keys(callerTypeCounts).length)
     const callerTypeChartData = Object.entries(callerTypeCounts)
       .map(([name, value], index) => ({
         name,
         value,
-        percentage: Math.round((value / totalCalls) * 100),
+        percentage: Math.round((value / validCallerTypeCalls) * 100),
         color: callerTypeColors[index]
       }))
       .sort((a, b) => b.value - a.value)
 
     setCallerTypeData(callerTypeChartData)
 
-    // Process sankey data (source to caller type relationships)
+    // Process sankey data (source to caller type relationships) - excluding Unknown values
     const relationships = callsData.reduce((acc, call) => {
-      const source = call.source?.trim() || 'Unknown'
-      const callerType = call.caller_type?.trim() || 'Unknown' 
-      const key = `${source}→${callerType}`
-      acc[key] = (acc[key] || 0) + 1
+      const source = call.source?.trim()
+      const callerType = call.caller_type?.trim()
+      
+      // Only include relationships where both source and caller type are valid (not null/undefined/Unknown)
+      if (source && source !== 'Unknown' && callerType && callerType !== 'Unknown') {
+        const key = `${source}→${callerType}`
+        acc[key] = (acc[key] || 0) + 1
+      }
       return acc
     }, {} as Record<string, number>)
 
-    // Create unique nodes for sources and caller types
-    const uniqueSources = new Set(callsData.map(call => call.source?.trim() || 'Unknown'))
+    // Create unique nodes for sources and caller types (excluding Unknown values)
+    const uniqueSources = new Set(
+      callsData
+        .map(call => call.source?.trim())
+        .filter(source => source && source !== 'Unknown')
+    )
     const sourceNodes = Array.from(uniqueSources).map(source => ({ id: source, name: source }))
     
-    const uniqueCallerTypes = new Set(callsData.map(call => call.caller_type?.trim() || 'Unknown'))
+    const uniqueCallerTypes = new Set(
+      callsData
+        .map(call => call.caller_type?.trim())
+        .filter(callerType => callerType && callerType !== 'Unknown')
+    )
     const callerTypeNodes = Array.from(uniqueCallerTypes).map(callerType => ({ id: callerType, name: callerType }))
 
     const nodes = [...sourceNodes, ...callerTypeNodes]
