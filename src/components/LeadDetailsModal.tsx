@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { X, ExternalLink } from "lucide-react"
 import { supabase } from '@/lib/supabase'
+import CommunicationsTable from "@/components/CommunicationsTable"
+import { useCommunications } from "@/hooks/useCommunications"
 import { 
   calculateTimeSince, 
   formatName, 
@@ -30,6 +32,9 @@ interface CallAttempt {
 export default function LeadDetailsModal({ isOpen, onClose, lead }: LeadDetailsModalProps) {
   const [callAttempts, setCallAttempts] = useState<CallAttempt[]>([])
   const [loading, setLoading] = useState(false)
+  
+  // Use communications hook - assume account_id is available in lead data
+  const { communications, loading: communicationsLoading } = useCommunications(lead?.account_id || lead?.lead_id)
 
   useEffect(() => {
     if (isOpen && lead) {
@@ -210,6 +215,17 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }: LeadDetailsM
                 <p>No call attempts recorded for this lead.</p>
               </div>
             )}
+          </div>
+
+          {/* Communications */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
+              Communications
+            </h3>
+            <CommunicationsTable 
+              communications={communications} 
+              loading={communicationsLoading} 
+            />
           </div>
         </div>
 
