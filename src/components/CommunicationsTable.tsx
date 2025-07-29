@@ -122,55 +122,62 @@ export default function CommunicationsTable({ communications, loading }: Communi
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-3 px-4 font-medium text-gray-600">Type</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-600">Summary</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-600">Recording</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedCommunications.map((communication) => {
-            const isCurrentlyPlaying = audioState.playing && audioState.currentId === communication.communication_id
-            const hasRecording = !!communication.recording_url
-            
-            return (
-              <tr key={communication.communication_id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMessageTypeColor(communication.message_type)}`}>
-                    {formatMessageType(communication.message_type)}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-gray-900 max-w-xs">
-                  <div className="truncate" title={communication.summary || ''}>
-                    {communication.summary || 'No summary available'}
-                  </div>
-                </td>
-                <td className="py-3 px-4">
-                  <button
-                    onClick={() => handlePlayPause(communication)}
-                    disabled={!hasRecording}
-                    className={`p-2 rounded-full transition-colors ${
-                      hasRecording 
-                        ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer' 
-                        : 'text-gray-300 cursor-not-allowed'
-                    }`}
-                    title={hasRecording ? (isCurrentlyPlaying ? 'Pause recording' : 'Play recording') : 'No recording available'}
-                  >
-                    {isCurrentlyPlaying ? (
-                      <Pause className="w-4 h-4" />
-                    ) : (
-                      <Play className="w-4 h-4" />
-                    )}
-                  </button>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full">
+      <thead className="bg-gray-50 sticky top-0">
+        <tr>
+          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-48">Type</th>
+          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm">Summary</th>
+          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-32">Created</th>
+          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-20">Audio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sortedCommunications.map((communication) => {
+          const isCurrentlyPlaying = audioState.playing && audioState.currentId === communication.communication_id
+          const hasRecording = !!communication.recording_url
+          
+          return (
+            <tr key={communication.communication_id} className="border-b border-gray-100 hover:bg-gray-50">
+              <td className="py-4 px-6 w-48">
+                <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getMessageTypeColor(communication.message_type)}`}>
+                  {formatMessageType(communication.message_type)}
+                </span>
+              </td>
+              <td className="py-4 px-6 text-gray-900">
+                <div className="text-sm leading-relaxed" title={communication.summary || ''}>
+                  {communication.summary || 'No summary available'}
+                </div>
+              </td>
+              <td className="py-4 px-6 text-gray-600 text-sm w-32">
+                {new Date(communication.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </td>
+              <td className="py-4 px-6 w-20">
+                <button
+                  onClick={() => handlePlayPause(communication)}
+                  disabled={!hasRecording}
+                  className={`p-2 rounded-full transition-colors ${
+                    hasRecording 
+                      ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer' 
+                      : 'text-gray-300 cursor-not-allowed'
+                  }`}
+                  title={hasRecording ? (isCurrentlyPlaying ? 'Pause recording' : 'Play recording') : 'No recording available'}
+                >
+                  {isCurrentlyPlaying ? (
+                    <Pause className="w-4 h-4" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
+                </button>
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
   )
 }

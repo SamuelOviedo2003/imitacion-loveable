@@ -17,7 +17,7 @@ const mockMessages: Message[] = [
     id: 1,
     sender: "John Doe",
     content: "Hi there! I'm interested in getting a quote for roof repair.",
-    timestamp: "2:30 PM",
+    timestamp: "Today 2:30 PM",
     isOwnMessage: false,
     type: 'text'
   },
@@ -25,15 +25,15 @@ const mockMessages: Message[] = [
     id: 2,
     sender: "You",
     content: "Hi John! I'd be happy to help you with that. Can you tell me more about the issues you're experiencing?",
-    timestamp: "2:32 PM",
+    timestamp: "Today 2:32 PM",
     isOwnMessage: true,
     type: 'text'
   },
   {
     id: 3,
-    sender: "John Doe",
+    sender: "John Doe", 
     content: "I have some missing shingles and noticed a small leak during the last storm.",
-    timestamp: "2:35 PM",
+    timestamp: "Today 2:35 PM",
     isOwnMessage: false,
     type: 'text'
   },
@@ -41,7 +41,23 @@ const mockMessages: Message[] = [
     id: 4,
     sender: "You",
     content: "That definitely needs attention. I can schedule an inspection for you. What days work best?",
-    timestamp: "2:37 PM",
+    timestamp: "Today 2:37 PM",
+    isOwnMessage: true,
+    type: 'text'
+  },
+  {
+    id: 5,
+    sender: "John Doe",
+    content: "Tomorrow morning would be perfect if possible.",
+    timestamp: "Today 2:40 PM",
+    isOwnMessage: false,
+    type: 'text'
+  },
+  {
+    id: 6,
+    sender: "You",
+    content: "Great! I have availability at 9 AM. I'll send you the confirmation details.",
+    timestamp: "Today 2:42 PM",
     isOwnMessage: true,
     type: 'text'
   }
@@ -82,40 +98,53 @@ export default function ChatInterface() {
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900 text-sm">Conference Meeting</h3>
+            <h3 className="font-semibold text-gray-900 text-sm">John Doe</h3>
             <p className="text-xs text-gray-500">Lead Conversation</p>
           </div>
-          <button className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-            <MoreVertical className="w-4 h-4 text-gray-600" />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-xs text-gray-500">Online</span>
+          </div>
         </div>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-xs px-3 py-2 rounded-2xl ${
-                message.isOwnMessage
-                  ? 'bg-blue-600 text-white rounded-br-md'
-                  : 'bg-gray-100 text-gray-900 rounded-bl-md'
-              }`}
-            >
-              <p className="text-xs leading-relaxed">{message.content}</p>
-              <p
-                className={`text-xs mt-1 opacity-75 ${
-                  message.isOwnMessage ? 'text-blue-100' : 'text-gray-500'
-                }`}
-              >
-                {message.timestamp}
-              </p>
-            </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        {/* Date Separator */}
+        <div className="flex items-center justify-center py-2">
+          <div className="bg-gray-100 px-3 py-1 rounded-full">
+            <span className="text-xs text-gray-600 font-medium">Today</span>
           </div>
-        ))}
+        </div>
+        
+        {messages.map((message, index) => {
+          const showTimestamp = index === 0 || 
+            messages[index - 1].isOwnMessage !== message.isOwnMessage ||
+            index % 3 === 0;
+            
+          return (
+            <div key={message.id}>
+              {showTimestamp && (
+                <div className="text-center mb-2">
+                  <span className="text-xs text-gray-400">{message.timestamp}</span>
+                </div>
+              )}
+              <div
+                className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-xs px-3 py-2 rounded-2xl ${
+                    message.isOwnMessage
+                      ? 'bg-blue-600 text-white rounded-br-md'
+                      : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                  }`}
+                >
+                  <p className="text-xs leading-relaxed">{message.content}</p>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Poll Demo Section */}
