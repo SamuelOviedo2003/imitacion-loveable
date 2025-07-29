@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
+import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 import { supabase } from '@/lib/supabase'
+import Header from "@/components/Header"
 import CommunicationsTable from "@/components/CommunicationsTable"
 import ChatInterface from "@/components/ChatInterface"
 import { useCommunications } from "@/hooks/useCommunications"
@@ -214,12 +215,12 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const currentHouse = houses[currentHouseIndex]
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-8xl mx-auto h-screen flex gap-4">
-        {/* Left Section - Content Grid */}
-        <div className="flex-1 grid grid-rows-2 gap-4">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        <div className="flex flex-col gap-10">
           {/* Top Row: Lead Info + Property Image */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-8">
             {/* Top Left: Lead Information Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-6">
@@ -291,180 +292,76 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            {/* Top Center: Property Carousel */}
-            <div className="relative">
-              {houses.length > 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  {/* Property Card */}
-                  <div className="relative">
-                    {/* Property Image with Internal Slider */}
-                    <div className="relative h-48 bg-gray-100">
-                      {currentHouse && currentHouse.photos.length > 0 ? (
-                        <>
-                          <img
-                            src={currentHouse.photos[currentPhotoIndex]}
-                            alt={`Property photo ${currentPhotoIndex + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          
-                          {/* Timer Badge (like auction countdown) */}
-                          <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded-full text-xs">
-                            {currentHouse.photos.length} photos
-                          </div>
-                          
-                          {/* Internal Photo Navigation */}
-                          {currentHouse.photos.length > 1 && (
-                            <>
-                              <button
-                                onClick={prevPhoto}
-                                className="absolute left-2 top-1/2 transform -translate-y-1/2 p-1 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full transition-colors shadow-sm"
-                              >
-                                <ChevronLeft className="w-3 h-3 text-gray-800" />
-                              </button>
-                              <button
-                                onClick={nextPhoto}
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full transition-colors shadow-sm"
-                              >
-                                <ChevronRight className="w-3 h-3 text-gray-800" />
-                              </button>
-                              
-                              {/* Photo Dots */}
-                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-                                {currentHouse.photos.map((_, index) => (
-                                  <button
-                                    key={index}
-                                    onClick={() => setCurrentPhotoIndex(index)}
-                                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                                      index === currentPhotoIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 bg-gray-400 rounded-lg flex items-center justify-center">
-                              <div className="w-6 h-6 bg-gray-500 rounded"></div>
-                            </div>
-                            <p className="text-gray-600 text-xs">No Image</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Property Info Card Body */}
-                    <div className="p-4">
-                      <div className="mb-3">
-                        <h3 className="font-bold text-gray-900 text-lg mb-1">
-                          {currentHouse?.address || 'Property Address'}
-                        </h3>
-                        <p className="text-gray-600 text-sm">Residential Property</p>
-                      </div>
-                      
-                      {/* Property Stats - Similar to auction info */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                            <span>{currentHouse?.photos.length || 0} Photos</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                            <span>Distance</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                            <span>Status</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Pricing Section - Like auction card */}
-                      <div className="border-t border-gray-100 pt-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-gray-500 mb-1">Property Value</p>
-                            <p className="text-lg font-bold text-gray-900">{lead.house_value || 'N/A'}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-gray-500 mb-1">Distance</p>
-                            <p className="text-lg font-bold text-green-600">{lead.distance || 'N/A'}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Property Navigation (House Carousel) */}
-                  {houses.length > 1 && (
-                    <div className="absolute -left-3 top-1/2 transform -translate-y-1/2">
-                      <button
-                        onClick={prevHouse}
-                        className="p-2 bg-white border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all"
-                      >
-                        <ChevronLeft className="w-4 h-4 text-gray-600" />
-                      </button>
-                    </div>
-                  )}
-                  
-                  {houses.length > 1 && (
-                    <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
-                      <button
-                        onClick={nextHouse}
-                        className="p-2 bg-white border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all"
-                      >
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
-                      </button>
-                    </div>
-                  )}
-                  
-                  {houses.length > 1 && (
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-black bg-opacity-75 text-white px-2 py-1 rounded-full text-xs">
-                        {currentHouseIndex + 1} / {houses.length}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+            {/* Top Right: Single Property Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Property Image */}
+              <div className="relative h-48 bg-gray-100">
+                {houses.length > 0 && houses[0].photos.length > 0 ? (
+                  <img
+                    src={houses[0].photos[0]}
+                    alt="Property"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-3 bg-gray-400 rounded-lg flex items-center justify-center">
-                        <div className="w-8 h-8 bg-gray-500 rounded"></div>
+                      <div className="w-12 h-12 mx-auto mb-2 bg-gray-400 rounded-lg flex items-center justify-center">
+                        <div className="w-6 h-6 bg-gray-500 rounded"></div>
                       </div>
-                      <p className="text-gray-600">No Properties Available</p>
+                      <p className="text-gray-600 text-xs">No Image</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Property Info */}
+              <div className="p-4">
+                <div className="mb-3">
+                  <h3 className="font-bold text-gray-900 text-lg mb-1">
+                    {houses.length > 0 ? houses[0].address : 'Property Address'}
+                  </h3>
+                  <p className="text-gray-600 text-sm">Residential Property</p>
+                </div>
+                
+                {/* Property Details */}
+                <div className="border-t border-gray-100 pt-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Property Value</p>
+                      <p className="text-lg font-bold text-gray-900">{lead.house_value || 'N/A'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 mb-1">Distance</p>
+                      <p className="text-lg font-bold text-green-600">{lead.distance || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
-          {/* Bottom Row: Communications Table */}
-          <div className="flex gap-4">
-            {/* Communications Table - Full Width */}
-            <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Bottom: Communications + Chat Unified Component */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {/* Communications Table Section */}
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h3 className="text-xl font-semibold text-gray-900">Communications</h3>
+            </div>
+            <div className="overflow-auto" style={{ maxHeight: '300px' }}>
+              <CommunicationsTable 
+                communications={communications} 
+                loading={communicationsLoading} 
+              />
+            </div>
+            
+            {/* Chat Section */}
+            <div className="border-t border-gray-200">
               <div className="px-6 py-4 border-b border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-900">Communications</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Chat Messages</h3>
               </div>
-              <div className="overflow-auto" style={{ maxHeight: 'calc(50vh - 60px)' }}>
-                <CommunicationsTable 
-                  communications={communications} 
-                  loading={communicationsLoading} 
-                />
+              <div className="p-6">
+                <ChatInterface />
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Right Section: Full-Height Chat */}
-        <div className="w-80 flex-shrink-0">
-          <div className="h-full">
-            <ChatInterface />
           </div>
         </div>
       </div>
