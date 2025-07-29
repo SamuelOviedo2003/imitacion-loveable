@@ -40,6 +40,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const fetchLeadDetails = async () => {
     setLoading(true)
     try {
+      let leadData = null
+      
       // Check if this is a mock lead
       if (params.id.startsWith('mock-lead-')) {
         // Mock data for demo purposes
@@ -51,14 +53,15 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             urgency: "ASAP",
             service: "Full Replacement",
             house_value: "$450,000",
-            distance: "5.2 mi",
+            distance_meters: 8368, // 5.2 miles in meters
             created_at: "2024-01-01T05:00:00Z",
             email: "john.doe@example.com",
             phone: "(555) 123-4567",
             street_address: "123 Main St",
             city: "Springfield",
             state: "IL",
-            zip_code: "62701"
+            zip_code: "62701",
+            property_image_url: null
           },
           {
             lead_id: "mock-lead-2",
@@ -67,14 +70,15 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             urgency: "Within 2 weeks",
             service: "Repair",
             house_value: "$320,000",
-            distance: "8.7 mi",
+            distance_meters: 14001, // 8.7 miles in meters
             created_at: "2024-01-02T06:00:00Z",
             email: "jane.smith@example.com",
             phone: "(555) 234-5678",
             street_address: "456 Oak Ave",
             city: "Springfield",
             state: "IL",
-            zip_code: "62702"
+            zip_code: "62702",
+            property_image_url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800"
           },
           {
             lead_id: "mock-lead-3",
@@ -83,56 +87,65 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             urgency: "Next month",
             service: "Inspection",
             house_value: "$275,000",
-            distance: "12.1 mi",
+            distance_meters: 19472, // 12.1 miles in meters
             created_at: "2024-01-03T07:00:00Z",
             email: "david.lee@example.com",
             phone: "(555) 345-6789",
             street_address: "789 Pine Rd",
             city: "Springfield",
             state: "IL",
-            zip_code: "62703"
+            zip_code: "62703",
+            property_image_url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
           }
         ]
         
         const mockLead = mockLeads.find(lead => lead.lead_id === params.id)
         if (mockLead) {
-          setLead(mockLead)
+          leadData = mockLead
         } else {
           throw new Error('Mock lead not found')
         }
       } else {
         // Fetch lead details from Supabase
-        const { data: leadData, error: leadError } = await supabase
+        const { data: supabaseLeadData, error: leadError } = await supabase
           .from('leads')
           .select('*')
           .eq('lead_id', params.id)
           .single()
 
         if (leadError) throw leadError
-        setLead(leadData)
+        
+        // Also try to fetch additional property data from clients table if available
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('house_value, distance_meters, property_image_url')
+          .eq('lead_id', params.id)
+          .single()
+
+        // Merge lead data with client data
+        leadData = {
+          ...supabaseLeadData,
+          ...(clientData && {
+            house_value: clientData.house_value,
+            distance_meters: clientData.distance_meters,
+            property_image_url: clientData.property_image_url
+          })
+        }
       }
 
+      setLead(leadData)
 
-      // Mock houses data - replace with actual API call
-      setHouses([
-        {
+      // Set property data based on lead information
+      if (leadData) {
+        const address = `${leadData.street_address || ''} ${leadData.city || ''} ${leadData.state || ''}`.trim() || 'Property Address'
+        const propertyImageUrl = leadData.property_image_url || '/images/noIMAGE.png'
+        
+        setHouses([{
           id: '1',
-          address: '123 Main St',
-          photos: [
-            'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800',
-            'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800',
-            'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'
-          ]
-        },
-        {
-          id: '2', 
-          address: '456 Oak Ave',
-          photos: [
-            'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800',
-            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800'
-          ]
-        }
-      ])
+          address: address,
+          photos: [propertyImageUrl]
+        }])
+      }
 
     } catch (error) {
       console.error('Error fetching lead details:', error)
@@ -153,6 +166,12 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
       })
     }
     return ''
+  }
+
+  const formatDistance = (distanceMeters: number) => {
+    if (!distanceMeters) return 'N/A'
+    const miles = (distanceMeters * 0.000621371).toFixed(1)
+    return `${miles} mi`
   }
 
   const nextHouse = () => {
@@ -295,12 +314,12 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             {/* Top Right: Single Property Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               {/* Property Image */}
-              <div className="relative h-48 bg-gray-100">
+              <div className="relative h-48 bg-white">
                 {houses.length > 0 && houses[0].photos.length > 0 ? (
                   <img
                     src={houses[0].photos[0]}
                     alt="Property"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
@@ -332,7 +351,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500 mb-1">Distance</p>
-                      <p className="text-lg font-bold text-green-600">{lead.distance || 'N/A'}</p>
+                      <p className="text-lg font-bold text-green-600">{formatDistance(lead.distance_meters) || lead.distance || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -353,14 +372,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               />
             </div>
             
-            {/* Chat Section */}
-            <div className="border-t border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900">Chat Messages</h3>
-              </div>
-              <div className="p-6">
-                <ChatInterface />
-              </div>
+            {/* Message Input Section */}
+            <div className="border-t border-gray-200 px-6 py-4">
+              <ChatInterface />
             </div>
           </div>
         </div>
