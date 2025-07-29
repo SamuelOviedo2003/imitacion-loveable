@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import LeadDetailsModal from "@/components/LeadDetailsModal"
 import { 
   formatName, 
   formatUrgency, 
@@ -17,40 +17,64 @@ import {
 // Mock data - will be replaced with real Supabase data
 const leadsTableData = [
   {
+    id: "mock-lead-1",
+    lead_id: "mock-lead-1",
     name: "John Doe",
+    first_name: "John",
+    last_name: "Doe",
     urgency: "ASAP",
     service: "Full Replacement",
     houseValue: "$450,000",
+    house_value: "$450,000",
     distance: "5.2 mi",
     dateTime: "Jan 1, 5:00 AM",
+    created_at: "2024-01-01T05:00:00Z",
     speedToLead: "2:00",
     va: "Amelia",
     urgencyColor: "bg-red-50 text-red-600 border border-red-200",
     speedColor: "text-green-600",
+    email: "john.doe@example.com",
+    phone: "(555) 123-4567",
   },
   {
+    id: "mock-lead-2",
+    lead_id: "mock-lead-2",
     name: "Jane Smith",
+    first_name: "Jane",
+    last_name: "Smith",
     urgency: "Within 2 weeks",
     service: "Repair",
     houseValue: "$320,000",
+    house_value: "$320,000",
     distance: "8.7 mi",
     dateTime: "Jan 2, 6:00 AM",
+    created_at: "2024-01-02T06:00:00Z",
     speedToLead: "7:30",
     va: "Omar",
     urgencyColor: "bg-yellow-50 text-yellow-600 border border-yellow-200",
     speedColor: "text-orange-500",
+    email: "jane.smith@example.com",
+    phone: "(555) 234-5678",
   },
   {
+    id: "mock-lead-3",
+    lead_id: "mock-lead-3",
     name: "David Lee",
+    first_name: "David",
+    last_name: "Lee",
     urgency: "Next month",
     service: "Inspection",
     houseValue: "$275,000",
+    house_value: "$275,000",
     distance: "12.1 mi",
     dateTime: "Jan 3, 7:00 AM",
+    created_at: "2024-01-03T07:00:00Z",
     speedToLead: "1:25",
     va: "Alba",
     urgencyColor: "bg-blue-50 text-blue-600 border border-blue-200",
     speedColor: "text-green-600",
+    email: "david.lee@example.com",
+    phone: "(555) 345-6789",
   },
 ]
 
@@ -59,19 +83,13 @@ interface LeadsTableProps {
 }
 
 export default function LeadsTable({ leads }: LeadsTableProps) {
-  const [selectedLead, setSelectedLead] = useState<any>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  
+  const router = useRouter()
   const displayLeads = leads.length > 0 ? leads : leadsTableData
 
   const handleRowClick = (lead: any) => {
-    setSelectedLead(lead)
-    setIsModalOpen(true)
-  }
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedLead(null)
+    // Navigate to lead detail page
+    const leadId = lead.lead_id || lead.id || 'mock-lead-' + Math.random().toString(36).substr(2, 9)
+    router.push(`/leads/${leadId}`)
   }
 
   return (
@@ -141,12 +159,6 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
           </table>
         </div>
       </CardContent>
-      
-      <LeadDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        lead={selectedLead}
-      />
     </Card>
   )
 }
