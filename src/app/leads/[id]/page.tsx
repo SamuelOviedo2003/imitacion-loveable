@@ -124,12 +124,33 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
 
         if (leadError) throw leadError
         
-        // Also try to fetch additional property data from clients table if available
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('house_value, distance_meters, house_url, property_address, duration_seconds')
-          .eq('lead_id', params.id)
-          .single()
+        // Also try to fetch additional property data from clients table using proper JOIN
+        console.log('🔍 [Lead Detail] Fetching client data via account_id for lead_id:', params.id)
+        console.log('🔍 [Lead Detail] Lead account_id:', supabaseLeadData?.account_id)
+        
+        let clientData = null
+        let clientError = null
+        
+        if (supabaseLeadData?.account_id) {
+          // Method 1: Query clients table directly using account_id from the lead
+          const clientQuery = await supabase
+            .from('clients')
+            .select('house_value, distance_meters, house_url, full_address, duration_seconds')
+            .eq('account_id', supabaseLeadData.account_id)
+            .single()
+          
+          clientData = clientQuery.data
+          clientError = clientQuery.error
+          
+          console.log('📊 [Lead Detail] Client data result (via account_id):', { clientData, clientError })
+        } else {
+          console.warn('⚠️ [Lead Detail] No account_id found in lead data, cannot fetch client data')
+        }
+        
+        if (clientError) {
+          console.error('❌ [Lead Detail] Error fetching client data:', clientError)
+          // Don't throw error, just log it so the page still loads with lead data
+        }
 
         // Merge lead data with client data
         leadData = {
@@ -138,10 +159,12 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             house_value: clientData.house_value,
             distance_meters: clientData.distance_meters,
             house_url: clientData.house_url,
-            property_address: clientData.property_address,
+            property_address: clientData.full_address, // Map full_address to property_address
             duration_seconds: clientData.duration_seconds
           })
         }
+        
+        console.log('🔄 [Lead Detail] Final merged lead data:', leadData)
       }
 
       setLead(leadData)
@@ -155,6 +178,14 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         
         // Use house_url with fallback to noIMAGE.png
         const propertyImageUrl = leadData.house_url || leadData.property_image_url || '/images/noIMAGE.png'
+        
+        console.log('🏠 [Lead Detail] Property data setup:', {
+          address,
+          propertyImageUrl,
+          house_value: leadData.house_value,
+          distance_meters: leadData.distance_meters,
+          duration_seconds: leadData.duration_seconds
+        })
         
         setHouses([{
           id: '1',
@@ -267,17 +298,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               <div className="p-6">
                 {/* Personal/Contact Information - Unified Component */}
                 <div className="mb-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    {/* Avatar */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <span className="text-white text-xl font-bold">
-                        {leadName
-                          .split(" ")
-                          .map((n: string) => n[0])
-                          .join("")}
-                      </span>
-                    </div>
-                    
+                  <div className="mb-4">
                     {/* Contact Details */}
                     <div className="flex-1">
                       <h2 className="text-2xl font-bold text-gray-900 mb-3">{leadName}</h2>
@@ -360,29 +381,21 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               <div className="p-4">
                 <div className="mb-3">
                   <h3 className="font-bold text-gray-900 text-lg mb-1">
-                    {houses.length > 0 ? houses[0].address : 'Property Address'}
+                    {lead.property_address || houses[0]?.address || 'Property Address'}
                   </h3>
-                  <p className="text-gray-600 text-sm">Residential Property</p>
+                  <p className="text-gray-600 text-xl font-semibold">{lead.house_value || 'N/A'}</p>
                 </div>
                 
                 {/* Property Details */}
                 <div className="border-t border-gray-100 pt-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Property Value</p>
-                      <p className="text-lg font-bold text-gray-900">{lead.house_value || 'N/A'}</p>
-                    </div>
-                    <div>
                       <p className="text-xs text-gray-500 mb-1">Distance</p>
                       <p className="text-lg font-bold text-green-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Property Address</p>
-                      <p className="text-sm font-semibold text-gray-900">{lead.property_address || address || 'N/A'}</p>
-                    </div>
-                    <div>
                       <p className="text-xs text-gray-500 mb-1">Duration</p>
-                      <p className="text-sm font-semibold text-gray-900">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
+                      <p className="text-lg font-bold text-blue-600">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
