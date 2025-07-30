@@ -143,14 +143,14 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
         .map(call => call.source?.trim())
         .filter(source => source && source !== 'Unknown')
     )
-    const sourceNodes = Array.from(uniqueSources).map(source => ({ id: source, name: source }))
+    const sourceNodes = Array.from(uniqueSources).map(source => ({ id: source || 'Unknown', name: source || 'Unknown' }))
     
     const uniqueCallerTypes = new Set(
       callsData
         .map(call => call.caller_type?.trim())
         .filter(callerType => callerType && callerType !== 'Unknown')
     )
-    const callerTypeNodes = Array.from(uniqueCallerTypes).map(callerType => ({ id: callerType, name: callerType }))
+    const callerTypeNodes = Array.from(uniqueCallerTypes).map(callerType => ({ id: callerType || 'Unknown', name: callerType || 'Unknown' }))
 
     const nodes = [...sourceNodes, ...callerTypeNodes]
 

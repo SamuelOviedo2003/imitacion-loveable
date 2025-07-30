@@ -88,7 +88,7 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
       .append("path")
       .attr("class", "link")
       .attr("d", sankeyLinkHorizontal())
-      .style("stroke", (d: any) => colorScale(d.source.id))
+      .style("stroke", (d: any) => colorScale(d.source.id) as string)
       .style("stroke-opacity", 0.6)
       .style("stroke-width", (d: any) => Math.max(1, d.width))
       .style("fill", "none")
@@ -134,14 +134,14 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
       .attr("y", (d: any) => d.y0)
       .attr("height", (d: any) => d.y1 - d.y0)
       .attr("width", (d: any) => d.x1 - d.x0)
-      .style("fill", (d: any) => colorScale(d.id))
+      .style("fill", (d: any) => colorScale(d.id) as string)
       .style("stroke", "#333")
       .style("stroke-width", 1)
       .style("cursor", "pointer")
       .on("mouseover", function(event, d: any) {
         // Highlight node
         d3.select(this)
-          .style("fill", (d: any) => d3.color(colorScale(d.id))?.brighter(0.3).toString())
+          .style("fill", (d: any) => d3.color(colorScale(d.id) as string)?.brighter(0.3).toString() || colorScale(d.id) as string)
         
         // Highlight connected links
         const connectedLinks = [...(d.sourceLinks || []), ...(d.targetLinks || [])]
@@ -164,7 +164,7 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
       .on("mouseout", function(event, d: any) {
         // Reset node
         d3.select(this)
-          .style("fill", (d: any) => colorScale(d.id))
+          .style("fill", (d: any) => colorScale(d.id) as string)
         
         // Reset links
         g.selectAll(".link")

@@ -5,7 +5,9 @@ export async function middleware(request: NextRequest) {
   // Temporarily disable middleware to avoid any conflicts with authentication
   // Let client-side ProtectedLayout handle all authentication checks
   
-  console.log('Middleware called for:', request.nextUrl.pathname)
+  // Avoid using nextUrl.pathname in Edge Runtime to prevent Node.js url module usage
+  const pathname = new URL(request.url).pathname
+  console.log('Middleware called for:', pathname)
   
   return NextResponse.next()
 }
