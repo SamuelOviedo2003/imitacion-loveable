@@ -54,6 +54,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             service: "Full Replacement",
             house_value: "$450,000",
             distance_meters: 8368, // 5.2 miles in meters
+            duration_seconds: 1200, // 20 minutes
             created_at: "2024-01-01T05:00:00Z",
             email: "john.doe@example.com",
             phone: "(555) 123-4567",
@@ -61,6 +62,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             city: "Springfield",
             state: "IL",
             zip_code: "62701",
+            property_address: "123 Main St, Springfield, IL 62701",
+            house_url: "/images/house.png",
             property_image_url: null
           },
           {
@@ -71,6 +74,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             service: "Repair",
             house_value: "$320,000",
             distance_meters: 14001, // 8.7 miles in meters
+            duration_seconds: 900, // 15 minutes
             created_at: "2024-01-02T06:00:00Z",
             email: "jane.smith@example.com",
             phone: "(555) 234-5678",
@@ -78,6 +82,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             city: "Springfield",
             state: "IL",
             zip_code: "62702",
+            property_address: "456 Oak Ave, Springfield, IL 62702",
+            house_url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800",
             property_image_url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800"
           },
           {
@@ -88,6 +94,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             service: "Inspection",
             house_value: "$275,000",
             distance_meters: 19472, // 12.1 miles in meters
+            duration_seconds: 1800, // 30 minutes
             created_at: "2024-01-03T07:00:00Z",
             email: "david.lee@example.com",
             phone: "(555) 345-6789",
@@ -95,6 +102,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             city: "Springfield",
             state: "IL",
             zip_code: "62703",
+            property_address: "789 Pine Rd, Springfield, IL 62703",
+            house_url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
             property_image_url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
           }
         ]
@@ -118,7 +127,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         // Also try to fetch additional property data from clients table if available
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
-          .select('house_value, distance_meters, property_image_url')
+          .select('house_value, distance_meters, house_url, property_address, duration_seconds')
           .eq('lead_id', params.id)
           .single()
 
@@ -128,7 +137,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           ...(clientData && {
             house_value: clientData.house_value,
             distance_meters: clientData.distance_meters,
-            property_image_url: clientData.property_image_url
+            house_url: clientData.house_url,
+            property_address: clientData.property_address,
+            duration_seconds: clientData.duration_seconds
           })
         }
       }
@@ -137,8 +148,13 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
 
       // Set property data based on lead information
       if (leadData) {
-        const address = `${leadData.street_address || ''} ${leadData.city || ''} ${leadData.state || ''}`.trim() || 'Property Address'
-        const propertyImageUrl = leadData.property_image_url || '/images/noIMAGE.png'
+        // Use property_address if available, otherwise construct from street_address, city, state
+        const address = leadData.property_address || 
+          `${leadData.street_address || ''} ${leadData.city || ''} ${leadData.state || ''}`.trim() || 
+          'Property Address'
+        
+        // Use house_url with fallback to noIMAGE.png
+        const propertyImageUrl = leadData.house_url || leadData.property_image_url || '/images/noIMAGE.png'
         
         setHouses([{
           id: '1',
@@ -172,6 +188,12 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     if (!distanceMeters) return 'N/A'
     const miles = (distanceMeters * 0.000621371).toFixed(1)
     return `${miles} mi`
+  }
+
+  const formatDuration = (durationSeconds: number) => {
+    if (!durationSeconds) return 'N/A'
+    const minutes = Math.round(durationSeconds / 60)
+    return `${minutes} min`
   }
 
   const nextHouse = () => {
@@ -320,16 +342,17 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                     src={houses[0].photos[0]}
                     alt="Property"
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/images/noIMAGE.png';
+                    }}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-2 bg-gray-400 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-6 bg-gray-500 rounded"></div>
-                      </div>
-                      <p className="text-gray-600 text-xs">No Image</p>
-                    </div>
-                  </div>
+                  <img
+                    src="/images/noIMAGE.png"
+                    alt="No Property Image"
+                    className="w-full h-full object-contain"
+                  />
                 )}
               </div>
               
@@ -344,14 +367,22 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                 
                 {/* Property Details */}
                 <div className="border-t border-gray-100 pt-3">
-                  <div className="flex items-center justify-between">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Property Value</p>
                       <p className="text-lg font-bold text-gray-900">{lead.house_value || 'N/A'}</p>
                     </div>
-                    <div className="text-right">
+                    <div>
                       <p className="text-xs text-gray-500 mb-1">Distance</p>
-                      <p className="text-lg font-bold text-green-600">{formatDistance(lead.distance_meters) || lead.distance || 'N/A'}</p>
+                      <p className="text-lg font-bold text-green-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Property Address</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.property_address || address || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Duration</p>
+                      <p className="text-sm font-semibold text-gray-900">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
