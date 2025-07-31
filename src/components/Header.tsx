@@ -39,26 +39,26 @@ export default function Header() {
     return pathname === path
   }
 
+  // Don't render header until business data is loaded
+  if (loading || !businessData || !businessData.avatar_url) {
+    return null
+  }
+
   return (
     <div className="container mx-auto px-6 pt-6">
       <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg">
         <header className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center">
             <Link href="/home">
-              {!loading && (
-                <img
-                  src={businessData && businessData.avatar_url ? businessData.avatar_url : "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-VM83AopODeRbWG1Ol4Eblk7MP7Qaka.png"}
-                  alt={businessData && businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
-                  className="h-12 w-auto bg-white rounded px-1 cursor-pointer"
-                  style={{
-                    filter: "drop-shadow(0 0 0 white)",
-                    mixBlendMode: "multiply",
-                  }}
-                />
-              )}
-              {loading && (
-                <div className="h-12 w-12 bg-gray-200 rounded animate-pulse"></div>
-              )}
+              <img
+                src={businessData.avatar_url}
+                alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
+                className="h-12 w-auto bg-white rounded px-1 cursor-pointer"
+                style={{
+                  filter: "drop-shadow(0 0 0 white)",
+                  mixBlendMode: "multiply",
+                }}
+              />
             </Link>
           </div>
 
