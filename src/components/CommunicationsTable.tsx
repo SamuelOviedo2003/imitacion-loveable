@@ -42,33 +42,14 @@ const getMessageTypeColor = (messageType: string) => {
   return 'bg-gray-50 text-gray-600 border border-gray-200'
 }
 
-const getSortOrder = (messageType: string): number => {
-  const lowerType = messageType.toLowerCase()
-  
-  if (lowerType.includes('fb-ads') || lowerType.includes('fb_ads')) return 1
-  if (lowerType.includes('sms-full') || lowerType.includes('sms_full')) return 2
-  if (lowerType.includes('outgoing') && lowerType.includes('call')) return 3
-  if (lowerType.includes('booking')) return 4
-  
-  // Any other types come after the specified ones
-  return 999
-}
 
 export default function CommunicationsTable({ communications, loading }: CommunicationsTableProps) {
   const [audioState, setAudioState] = useState<AudioState>({ playing: false, currentId: null })
   const audioRef = useRef<HTMLAudioElement | null>(null)
   
-  // Sort communications by the specified order
+  // Sort communications by created date (oldest to newest)
   const sortedCommunications = [...communications].sort((a, b) => {
-    const orderA = getSortOrder(a.message_type)
-    const orderB = getSortOrder(b.message_type)
-    
-    if (orderA !== orderB) {
-      return orderA - orderB
-    }
-    
-    // If same type, sort by created_at (newest first)
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   })
 
   const handlePlayPause = (communication: Communication) => {
