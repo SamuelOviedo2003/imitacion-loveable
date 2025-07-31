@@ -305,7 +305,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       <div className="space-y-1 text-gray-600">
                         <p className="text-sm">{lead.email || lead.customer_email || 'No email provided'}</p>
                         <p className="text-sm">{lead.phone || lead.phone_number || 'No phone provided'}</p>
-                        <p className="text-sm">{address || 'No address provided'}</p>
+                        <p className="text-sm">Score: {lead.score || 'N/A'}</p>
                         {address && (
                           <a
                             href={googleMapsUrl}
@@ -338,12 +338,28 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       <p className="text-sm font-semibold text-gray-900">{timeSinceLead}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Property Value</p>
-                      <p className="text-sm font-semibold text-gray-900">{lead.house_value || lead.property_value || 'N/A'}</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Assigned</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.assigned || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Distance</p>
-                      <p className="text-sm font-semibold text-gray-900">{lead.distance || 'N/A'}</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Setter Name</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.setter_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Roof Age</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.roof_age || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Type</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.payment_type || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email Valid</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.email_valid ? 'Yes' : 'No'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Source</p>
+                      <p className="text-sm font-semibold text-gray-900">{lead.source || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Appointment</p>
@@ -409,12 +425,10 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             <div className="px-6 py-4 border-b border-gray-100">
               <h3 className="text-xl font-semibold text-gray-900">Communications</h3>
             </div>
-            <div className="overflow-auto" style={{ maxHeight: '300px' }}>
-              <CommunicationsTable 
-                communications={communications} 
-                loading={communicationsLoading} 
-              />
-            </div>
+            <CommunicationsTable 
+              communications={communications} 
+              loading={communicationsLoading} 
+            />
             
             {/* Message Input Section */}
             <div className="border-t border-gray-200 px-6 py-4">
