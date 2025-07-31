@@ -1,7 +1,10 @@
 export const formatName = (lead: any) => {
-  if (lead.customer_name) return lead.customer_name
-  if (lead.first_name && lead.last_name) return `${lead.first_name} ${lead.last_name}`
-  return lead.name || 'Unknown'
+  const firstName = lead.first_name?.trim()
+  const lastName = lead.last_name?.trim()
+  
+  if (firstName && lastName) return `${firstName} ${lastName}`
+  if (firstName) return firstName
+  return 'Unknown'
 }
 
 export const formatUrgency = (lead: any) => {
