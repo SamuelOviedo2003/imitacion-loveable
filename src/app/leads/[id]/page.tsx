@@ -227,6 +227,30 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     return `${minutes} min`
   }
 
+  const getScoreBackgroundColor = (score: number | null) => {
+    if (!score || score < 0) return 'bg-gray-100 border-gray-200'
+    
+    if (score <= 33) {
+      return 'bg-red-100 border-red-200'
+    } else if (score <= 66) {
+      return 'bg-yellow-100 border-yellow-200'
+    } else {
+      return 'bg-green-100 border-green-200'
+    }
+  }
+
+  const getScoreTextColor = (score: number | null) => {
+    if (!score || score < 0) return 'text-gray-600'
+    
+    if (score <= 33) {
+      return 'text-red-700'
+    } else if (score <= 66) {
+      return 'text-yellow-700'
+    } else {
+      return 'text-green-700'
+    }
+  }
+
   const nextHouse = () => {
     setCurrentHouseIndex((prev) => (prev + 1) % houses.length)
     setCurrentPhotoIndex(0)
@@ -299,24 +323,40 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                 {/* Personal/Contact Information - Unified Component */}
                 <div className="mb-6">
                   <div className="mb-4">
-                    {/* Contact Details */}
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-3">{leadName}</h2>
-                      <div className="space-y-1 text-gray-600">
-                        <p className="text-sm">{lead.email || lead.customer_email || 'No email provided'}</p>
-                        <p className="text-sm">{lead.phone || lead.phone_number || 'No phone provided'}</p>
-                        <p className="text-sm">Score: {lead.score || 'N/A'}</p>
-                        {address && (
-                          <a
-                            href={googleMapsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm transition-colors mt-2"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            View on Maps
-                          </a>
-                        )}
+                    <div className="flex justify-between items-start">
+                      {/* Contact Details */}
+                      <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-3">{leadName}</h2>
+                        <div className="space-y-1 text-gray-600">
+                          <p className="text-sm">{lead.email || lead.customer_email || 'No email provided'}</p>
+                          <p className="text-sm">{lead.phone || lead.phone_number || 'No phone provided'}</p>
+                          {address && (
+                            <a
+                              href={googleMapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm transition-colors mt-2"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              View on Maps
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Lead Score Component */}
+                      <div className={`rounded-lg p-4 border shadow-sm max-w-[65%] max-h-[65%] min-w-[180px] min-h-[120px] ${getScoreBackgroundColor(lead.score)}`}>
+                        <div className="text-center mb-3">
+                          <div className={`text-3xl font-bold mb-1 ${getScoreTextColor(lead.score)}`}>
+                            {lead.score ? `${lead.score}%` : 'N/A'}
+                          </div>
+                          <div className={`text-xs font-medium uppercase tracking-wide ${getScoreTextColor(lead.score)}`}>
+                            Lead Score
+                          </div>
+                        </div>
+                        <div className={`text-xs leading-relaxed text-justify max-h-20 overflow-y-auto ${getScoreTextColor(lead.score)}`}>
+                          {lead.score_summary || 'No score summary available'}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -330,12 +370,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       <p className="text-sm font-semibold text-gray-900">{service}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Urgency</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">How Soon</p>
                       <p className="text-sm font-semibold text-gray-900">{urgency}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Time Since Lead</p>
-                      <p className="text-sm font-semibold text-gray-900">{timeSinceLead}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Assigned</p>

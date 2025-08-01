@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Play, Pause } from "lucide-react"
 import { Communication } from "@/hooks/useCommunications"
 
@@ -12,6 +12,8 @@ interface CommunicationsTableProps {
 interface AudioState {
   playing: boolean
   currentId: number | null
+  duration: number
+  currentTime: number
 }
 
 const formatMessageType = (messageType: string) => {
@@ -44,8 +46,37 @@ const getMessageTypeColor = (messageType: string) => {
 
 
 export default function CommunicationsTable({ communications, loading }: CommunicationsTableProps) {
-  const [audioState, setAudioState] = useState<AudioState>({ playing: false, currentId: null })
+  const [audioState, setAudioState] = useState<AudioState>({ 
+    playing: false, 
+    currentId: null, 
+    duration: 0, 
+    currentTime: 0 
+  })
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Update progress
+  useEffect(() => {
+    const updateProgress = () => {
+      if (audioRef.current) {
+        setAudioState(prev => ({
+          ...prev,
+          currentTime: audioRef.current?.currentTime || 0,
+          duration: audioRef.current?.duration || 0
+        }))
+      }
+    }
+
+    const audio = audioRef.current
+    if (audio) {
+      audio.addEventListener('timeupdate', updateProgress)
+      audio.addEventListener('loadedmetadata', updateProgress)
+      
+      return () => {
+        audio.removeEventListener('timeupdate', updateProgress)
+        audio.removeEventListener('loadedmetadata', updateProgress)
+      }
+    }
+  }, [audioRef.current])
   
   // Sort communications by created date (oldest to newest)
   const sortedCommunications = [...communications].sort((a, b) => {
@@ -60,7 +91,7 @@ export default function CommunicationsTable({ communications, loading }: Communi
     if (isCurrentlyPlaying) {
       // Pause current audio
       audioRef.current?.pause()
-      setAudioState({ playing: false, currentId: null })
+      setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
     } else {
       // Stop any currently playing audio
       audioRef.current?.pause()
@@ -70,22 +101,35 @@ export default function CommunicationsTable({ communications, loading }: Communi
       audioRef.current = audio
       
       audio.onended = () => {
-        setAudioState({ playing: false, currentId: null })
+        setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
       }
       
       audio.onerror = () => {
-        setAudioState({ playing: false, currentId: null })
+        setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
         console.error('Error playing audio')
       }
       
       // Play new audio
       audio.play().then(() => {
-        setAudioState({ playing: true, currentId: communication.communication_id })
+        setAudioState(prev => ({ ...prev, playing: true, currentId: communication.communication_id }))
       }).catch((error) => {
         console.error('Error playing audio:', error)
-        setAudioState({ playing: false, currentId: null })
+        setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
       })
     }
+  }
+
+  const handleSeek = (communication: Communication, seekTime: number) => {
+    if (!audioRef.current || audioState.currentId !== communication.communication_id) return
+    
+    audioRef.current.currentTime = seekTime
+  }
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00'
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
   if (loading) {
@@ -104,14 +148,14 @@ export default function CommunicationsTable({ communications, loading }: Communi
 
   return (
     <table className="w-full">
-      <thead className="bg-gray-50 sticky top-0">
-        <tr>
-          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-48">Type</th>
-          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm">Summary</th>
-          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-32">Created</th>
-          <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-20">Audio</th>
-        </tr>
-      </thead>
+        <thead className="bg-gray-50 sticky top-0">
+          <tr>
+            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-48">Type</th>
+            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm">Summary</th>
+            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-32">Created</th>
+            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-32">Audio</th>
+          </tr>
+        </thead>
       <tbody>
         {sortedCommunications.map((communication) => {
           const isCurrentlyPlaying = audioState.playing && audioState.currentId === communication.communication_id
@@ -137,23 +181,67 @@ export default function CommunicationsTable({ communications, loading }: Communi
                   minute: '2-digit'
                 })}
               </td>
-              <td className="py-4 px-6 w-20">
-                <button
-                  onClick={() => handlePlayPause(communication)}
-                  disabled={!hasRecording}
-                  className={`p-2 rounded-full transition-colors ${
-                    hasRecording 
-                      ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer' 
-                      : 'text-gray-300 cursor-not-allowed'
-                  }`}
-                  title={hasRecording ? (isCurrentlyPlaying ? 'Pause recording' : 'Play recording') : 'No recording available'}
-                >
-                  {isCurrentlyPlaying ? (
-                    <Pause className="w-4 h-4" />
-                  ) : (
+              <td className="py-4 px-6 w-32">
+                {hasRecording ? (
+                  <div className="flex flex-col items-center space-y-2">
+                    <button
+                      onClick={() => handlePlayPause(communication)}
+                      className="p-1.5 rounded-full transition-colors text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                      title={isCurrentlyPlaying ? 'Pause recording' : 'Play recording'}
+                    >
+                      {isCurrentlyPlaying ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                    </button>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full max-w-[100px]">
+                      <div className="relative">
+                        <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          {/* Progress fill */}
+                          {audioState.currentId === communication.communication_id && audioState.duration > 0 && (
+                            <div 
+                              className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-100"
+                              style={{ 
+                                width: `${(audioState.currentTime / audioState.duration) * 100}%` 
+                              }}
+                            />
+                          )}
+                          
+                          {/* Clickable overlay */}
+                          <input
+                            type="range"
+                            min="0"
+                            max={audioState.currentId === communication.communication_id ? audioState.duration || 0 : 0}
+                            step="0.1"
+                            value={audioState.currentId === communication.communication_id ? audioState.currentTime : 0}
+                            onChange={(e) => handleSeek(communication, parseFloat(e.target.value))}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                            disabled={audioState.currentId !== communication.communication_id}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Time Display */}
+                      {audioState.currentId === communication.communication_id && (
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>{formatTime(audioState.currentTime)}</span>
+                          <span>{formatTime(audioState.duration)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    disabled
+                    className="p-2 rounded-full text-gray-300 cursor-not-allowed"
+                    title="No recording available"
+                  >
                     <Play className="w-4 h-4" />
-                  )}
-                </button>
+                  </button>
+                )}
               </td>
             </tr>
           )

@@ -77,6 +77,30 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }: LeadDetailsM
   const address = formatAddress(lead)
   const googleMapsUrl = generateGoogleMapsUrl(address)
 
+  const getScoreBackgroundColor = (score: number | null) => {
+    if (!score || score < 0) return 'bg-gray-100 border-gray-200'
+    
+    if (score <= 33) {
+      return 'bg-red-100 border-red-200'
+    } else if (score <= 66) {
+      return 'bg-yellow-100 border-yellow-200'
+    } else {
+      return 'bg-green-100 border-green-200'
+    }
+  }
+
+  const getScoreTextColor = (score: number | null) => {
+    if (!score || score < 0) return 'text-gray-600'
+    
+    if (score <= 33) {
+      return 'text-red-700'
+    } else if (score <= 66) {
+      return 'text-yellow-700'
+    } else {
+      return 'text-green-700'
+    }
+  }
+
   const formatAppointmentDate = (lead: any) => {
     if (lead.start_time) {
       return new Date(lead.start_time).toLocaleString('en-US', {
@@ -98,7 +122,6 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }: LeadDetailsM
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Lead Details</h2>
-            <p className="text-sm text-gray-500 mt-1">Time Since Lead: {timeSinceLead}</p>
           </div>
           <button
             onClick={onClose}
@@ -146,9 +169,25 @@ export default function LeadDetailsModal({ isOpen, onClose, lead }: LeadDetailsM
 
             {/* Contact Information */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
-                Contact Information
-              </h3>
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 flex-1">
+                  Contact Information
+                </h3>
+                {/* Lead Score Component */}
+                <div className={`rounded-lg p-3 border shadow-sm max-w-[65%] max-h-[65%] min-w-[140px] min-h-[100px] ${getScoreBackgroundColor(lead.score)}`}>
+                  <div className="text-center mb-2">
+                    <div className={`text-2xl font-bold mb-1 ${getScoreTextColor(lead.score)}`}>
+                      {lead.score ? `${lead.score}%` : 'N/A'}
+                    </div>
+                    <div className={`text-xs font-medium uppercase tracking-wide ${getScoreTextColor(lead.score)}`}>
+                      Lead Score
+                    </div>
+                  </div>
+                  <div className={`text-xs leading-relaxed text-justify max-h-16 overflow-y-auto ${getScoreTextColor(lead.score)}`}>
+                    {lead.score_summary || 'No score summary available'}
+                  </div>
+                </div>
+              </div>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600 font-medium">Email:</span>
