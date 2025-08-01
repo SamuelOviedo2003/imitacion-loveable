@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Settings } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -45,8 +45,8 @@ export default function Header() {
   }
 
   return (
-    <div className="container mx-auto px-6 pt-6">
-      <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg">
+    <div className="container mx-auto px-6 pt-6 relative z-50">
+      <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg relative">
         <header className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center">
             <Link href="/home">
@@ -107,7 +107,7 @@ export default function Header() {
 
           <div className="flex items-center space-x-4">
             {user && (
-              <div className="relative z-50" ref={dropdownRef}>
+              <div className="relative z-[99999]" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-2 transition-colors"
@@ -123,12 +123,20 @@ export default function Header() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[9999]">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[100000] shadow-2xl">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {user?.email}
                       </p>
                     </div>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
                     <button
                       onClick={handleSignOut}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
