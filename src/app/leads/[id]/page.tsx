@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
+import { ExternalLink, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import Header from "@/components/Header"
 import CommunicationsTable from "@/components/CommunicationsTable"
@@ -314,6 +314,17 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.push('/new-leads')}
+            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Back to New Leads</span>
+          </button>
+        </div>
+        
         <div className="flex flex-col gap-10">
           {/* Top Row: Lead Info + Property Image */}
           <div className="grid grid-cols-2 gap-8">
