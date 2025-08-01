@@ -8,18 +8,23 @@ import { Card } from "@/components/ui/card"
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Header() {
-  const { user, businessData, loading, signOut } = useAuth()
+  const { user, businessData, userProfile, allBusinesses, loading, signOut, switchBusiness } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const businessDropdownRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const router = useRouter()
 
 
-  // Handle clicking outside the dropdown to close it
+  // Handle clicking outside the dropdowns to close them
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false)
+      }
+      if (businessDropdownRef.current && !businessDropdownRef.current.contains(event.target as Node)) {
+        setIsBusinessDropdownOpen(false)
       }
     }
 
@@ -39,6 +44,21 @@ export default function Header() {
     return pathname === path
   }
 
+  const handleBusinessSwitch = async (businessId: number) => {
+    setIsBusinessDropdownOpen(false)
+    await switchBusiness(businessId)
+  }
+
+  const isSuperAdmin = userProfile?.role === 0
+  
+  // Simple logging to understand what's happening
+  console.log('Header Debug:', {
+    userRole: userProfile?.role,
+    isSuperAdmin,
+    allBusinessesCount: allBusinesses?.length,
+    showSwitcher: isSuperAdmin && allBusinesses && allBusinesses.length > 1
+  })
+
   // Don't render header until business data is loaded
   if (loading || !businessData || !businessData.avatar_url) {
     return null
@@ -48,7 +68,7 @@ export default function Header() {
     <div className="container mx-auto px-6 pt-6 relative z-50">
       <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg relative">
         <header className="flex items-center justify-between px-8 py-6">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Link href="/home">
               <img
                 src={businessData.avatar_url}
@@ -60,6 +80,75 @@ export default function Header() {
                 }}
               />
             </Link>
+            
+            {/* Business Switcher for Super Admin */}
+            {isSuperAdmin && allBusinesses && allBusinesses.length > 1 && (
+              <div className="relative z-[99999]" ref={businessDropdownRef}>
+                <button
+                  onClick={() => setIsBusinessDropdownOpen(!isBusinessDropdownOpen)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Switch Business"
+                >
+                  <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${
+                    isBusinessDropdownOpen ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                {isBusinessDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[100000] max-h-96 overflow-y-auto">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">Switch Business</p>
+                      <p className="text-xs text-gray-500">Select a business to manage</p>
+                    </div>
+                    
+                    {allBusinesses.map((business) => (
+                      <button
+                        key={business.business_id}
+                        onClick={() => handleBusinessSwitch(business.business_id)}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                          businessData?.business_id === business.business_id 
+                            ? 'bg-blue-50 border-r-2 border-blue-600' 
+                            : ''
+                        }`}
+                      >
+                        {/* Business Logo */}
+                        <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                          {business.avatar_url ? (
+                            <img 
+                              src={business.avatar_url} 
+                              alt={`${business.company_name} Logo`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              {business.company_name?.charAt(0) || 'B'}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Business Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {business.company_name || 'Unnamed Business'}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {business.city && business.state 
+                              ? `${business.city}, ${business.state}`
+                              : 'Location not set'
+                            }
+                          </p>
+                        </div>
+                        
+                        {/* Active Indicator */}
+                        {businessData?.business_id === business.business_id && (
+                          <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
