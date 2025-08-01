@@ -8,10 +8,7 @@ import {
   formatName, 
   formatUrgency, 
   formatService, 
-  formatDateTime, 
-  formatSpeedToLead, 
-  formatGrade, 
-  formatNextStep 
+  formatDateTime 
 } from "@/lib/leadUtils"
 
 // Mock data - will be replaced with real Supabase data
@@ -29,10 +26,9 @@ const leadsTableData = [
     distance: "5.2 mi",
     dateTime: "Jan 1, 5:00 AM",
     created_at: "2024-01-01T05:00:00Z",
-    speedToLead: "2:00",
-    va: "Amelia",
+    score: 85,
+    status: "New",
     urgencyColor: "bg-red-50 text-red-600 border border-red-200",
-    speedColor: "text-green-600",
     email: "john.doe@example.com",
     phone: "(555) 123-4567",
   },
@@ -49,10 +45,9 @@ const leadsTableData = [
     distance: "8.7 mi",
     dateTime: "Jan 2, 6:00 AM",
     created_at: "2024-01-02T06:00:00Z",
-    speedToLead: "7:30",
-    va: "Omar",
+    score: 45,
+    status: "Contacted",
     urgencyColor: "bg-yellow-50 text-yellow-600 border border-yellow-200",
-    speedColor: "text-orange-500",
     email: "jane.smith@example.com",
     phone: "(555) 234-5678",
   },
@@ -69,10 +64,9 @@ const leadsTableData = [
     distance: "12.1 mi",
     dateTime: "Jan 3, 7:00 AM",
     created_at: "2024-01-03T07:00:00Z",
-    speedToLead: "1:25",
-    va: "Alba",
+    score: 22,
+    status: "Qualified",
     urgencyColor: "bg-blue-50 text-blue-600 border border-blue-200",
-    speedColor: "text-green-600",
     email: "david.lee@example.com",
     phone: "(555) 345-6789",
   },
@@ -80,6 +74,18 @@ const leadsTableData = [
 
 interface LeadsTableProps {
   leads: any[]
+}
+
+const getScoreColor = (score: number | null) => {
+  if (!score || score < 0) return 'bg-gray-100 text-gray-600 border-gray-200'
+  
+  if (score <= 33) {
+    return 'bg-red-100 text-red-700 border-red-200'
+  } else if (score <= 66) {
+    return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+  } else {
+    return 'bg-green-100 text-green-700 border-green-200'
+  }
 }
 
 export default function LeadsTable({ leads }: LeadsTableProps) {
@@ -106,9 +112,8 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">How Soon</th>
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">Service</th>
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">Date</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Speed to Lead</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Grade</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Next Step</th>
+                <th className="text-left py-4 px-6 text-gray-600 font-medium">Score</th>
+                <th className="text-left py-4 px-6 text-gray-600 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -117,9 +122,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 const { urgency, urgencyColor } = formatUrgency(lead)
                 const service = formatService(lead)
                 const dateTime = formatDateTime(lead)
-                const { speed, speedColor } = formatSpeedToLead(lead)
-                const grade = formatGrade(lead)
-                const nextStep = formatNextStep(lead)
+                const scoreColor = getScoreColor(lead.score)
                 
                 return (
                   <tr 
@@ -147,11 +150,16 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                     </td>
                     <td className="py-4 px-6 text-gray-600">{service}</td>
                     <td className="py-4 px-6 text-gray-600">{dateTime}</td>
-                    <td className={`py-4 px-6 font-bold ${speedColor}`}>{speed}</td>
                     <td className="py-4 px-6">
-                      <Badge className="bg-blue-50 text-blue-600 border border-blue-200 text-xs">{grade}</Badge>
+                      <Badge className={`${scoreColor} text-xs font-bold`}>
+                        {lead.score ? `${lead.score}%` : 'N/A'}
+                      </Badge>
                     </td>
-                    <td className="py-4 px-6 text-gray-600">{nextStep}</td>
+                    <td className="py-4 px-6">
+                      <Badge className="bg-gray-50 text-gray-600 border border-gray-200 text-xs">
+                        {lead.status || 'N/A'}
+                      </Badge>
+                    </td>
                   </tr>
                 )
               })}

@@ -79,13 +79,13 @@ export default function Header() {
             >
               New Leads
             </Link>
-            <Link
-              href="/appointment-setters"
+            <Link 
+              href="/salesman" 
               className={`transition-colors text-sm font-medium ${
-                isActive('/appointment-setters') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                isActive('/salesman') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
               }`}
             >
-              Appointment Setters
+              Salesman
             </Link>
             <Link 
               href="/incoming-calls" 
@@ -94,14 +94,6 @@ export default function Header() {
               }`}
             >
               Incoming Calls
-            </Link>
-            <Link 
-              href="/salesman" 
-              className={`transition-colors text-sm font-medium ${
-                isActive('/salesman') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
-              }`}
-            >
-              Salesman
             </Link>
             <Link 
               href="/fb-analysis" 

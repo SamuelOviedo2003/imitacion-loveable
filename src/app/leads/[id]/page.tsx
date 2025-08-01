@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ExternalLink, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
+import { ExternalLink, ChevronLeft, ChevronRight, ArrowLeft, Check, X } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import Header from "@/components/Header"
 import CommunicationsTable from "@/components/CommunicationsTable"
@@ -402,7 +402,13 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email Valid</p>
-                      <p className="text-sm font-semibold text-gray-900">{lead.email_valid ? 'Yes' : 'No'}</p>
+                      <div className="flex items-center">
+                        {lead.email_valid ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-600" />
+                        )}
+                      </div>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Source</p>

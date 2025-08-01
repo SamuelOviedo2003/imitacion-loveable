@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import ProtectedLayout from "@/components/ProtectedLayout"
 import LeadMetrics from "@/components/LeadMetrics"
-import RevenueMetrics from "@/components/RevenueMetrics"
+import AppointmentSetters from "@/components/AppointmentSetters"
 import LeadsTable from "@/components/LeadsTable"
 import { useAuth } from "@/contexts/AuthContext"
 import { useMetrics } from "@/hooks/useMetrics"
@@ -18,7 +18,7 @@ export default function NewLeadsPage() {
   const {
     leads,
     leadMetrics,
-    revenueMetrics,
+    appointmentSetters,
     loading: metricsLoading
   } = useMetrics(timePeriod, businessId)
 
@@ -62,7 +62,9 @@ export default function NewLeadsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <LeadMetrics leadMetrics={leadMetrics} />
-            <RevenueMetrics revenueMetrics={revenueMetrics} />
+            <div>
+              <AppointmentSetters appointmentSetters={appointmentSetters} />
+            </div>
           </div>
 
           <LeadsTable leads={leads} />
