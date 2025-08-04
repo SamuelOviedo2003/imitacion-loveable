@@ -44,6 +44,22 @@ export default function Header() {
     }
   }, [businessData])
 
+  // Separate effect for handling logo timeout fallback
+  useEffect(() => {
+    if (!businessData?.avatar_url || logoLoaded || logoError) return
+
+    logoTimeoutRef.current = setTimeout(() => {
+      // If logo hasn't loaded after 1 second, assume it's there but cached
+      setLogoLoaded(true)
+    }, 1000)
+
+    return () => {
+      if (logoTimeoutRef.current) {
+        clearTimeout(logoTimeoutRef.current)
+      }
+    }
+  }, [businessData?.avatar_url, logoLoaded, logoError])
+
   // Handle clicking outside the dropdowns to close them
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -130,6 +146,7 @@ export default function Header() {
                     )}
                     {/* Actual logo */}
                     <img
+                      key={`${businessData.business_id}-${businessData.avatar_url}`}
                       src={businessData.avatar_url}
                       alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
                       className={`h-12 w-auto bg-white rounded px-1 cursor-pointer transition-opacity duration-200 ${
