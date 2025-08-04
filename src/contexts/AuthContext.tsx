@@ -103,6 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Fetch the new business data
         await fetchBusinessData({ business_id: businessId })
+        
+        // Force a page reload to refresh all content with new business data
+        window.location.reload()
       }
     } catch (error) {
       console.error('Error switching business:', error)
