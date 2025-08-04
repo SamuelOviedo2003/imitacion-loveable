@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ChevronDown, Settings } from "lucide-react"
+import { ChevronDown, Settings, Building2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -11,11 +11,38 @@ export default function Header() {
   const { user, businessData, userProfile, allBusinesses, loading, signOut, switchBusiness } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false)
+  const [logoLoaded, setLogoLoaded] = useState(false)
+  const [logoError, setLogoError] = useState(false)
+  const [showHeader, setShowHeader] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const businessDropdownRef = useRef<HTMLDivElement>(null)
+  const logoTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const pathname = usePathname()
   const router = useRouter()
 
+
+  // Handle logo loading logic and fallback
+  useEffect(() => {
+    if (!businessData) return
+
+    // Reset states when businessData changes
+    setLogoLoaded(false)
+    setLogoError(false)
+    
+    // Show header immediately for better UX
+    setShowHeader(true)
+
+    // Clear any existing timeout
+    if (logoTimeoutRef.current) {
+      clearTimeout(logoTimeoutRef.current)
+    }
+
+    return () => {
+      if (logoTimeoutRef.current) {
+        clearTimeout(logoTimeoutRef.current)
+      }
+    }
+  }, [businessData])
 
   // Handle clicking outside the dropdowns to close them
   useEffect(() => {
@@ -49,10 +76,36 @@ export default function Header() {
     await switchBusiness(businessId)
   }
 
-  const isSuperAdmin = userProfile?.role === 0
+  const handleLogoLoad = () => {
+    setLogoLoaded(true)
+    if (logoTimeoutRef.current) {
+      clearTimeout(logoTimeoutRef.current)
+    }
+  }
 
-  // Don't render header until business data is loaded
-  if (loading || !businessData || !businessData.avatar_url) {
+  const handleLogoError = () => {
+    setLogoError(true)
+    if (logoTimeoutRef.current) {
+      clearTimeout(logoTimeoutRef.current)
+    }
+  }
+
+  const isSuperAdmin = userProfile?.role === 0
+  
+  // Filter businesses to only show those with truthy avatar_url
+  const filteredBusinesses = allBusinesses?.filter(business => business.avatar_url) || []
+  
+  // Simple logging to understand what's happening
+  console.log('Header Debug:', {
+    userRole: userProfile?.role,
+    isSuperAdmin,
+    allBusinessesCount: allBusinesses?.length,
+    filteredBusinessesCount: filteredBusinesses.length,
+    showSwitcher: isSuperAdmin && filteredBusinesses.length > 1
+  })
+
+  // Don't render header until business data is loaded and header should be shown
+  if (loading || !businessData || !showHeader) {
     return null
   }
 
@@ -62,19 +115,40 @@ export default function Header() {
         <header className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center gap-2">
             <Link href="/home">
-              <img
-                src={businessData.avatar_url}
-                alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
-                className="h-12 w-auto bg-white rounded px-1 cursor-pointer"
-                style={{
-                  filter: "drop-shadow(0 0 0 white)",
-                  mixBlendMode: "multiply",
-                }}
-              />
+              <div className="relative h-12 min-w-[48px]">
+                {!businessData.avatar_url || logoError ? (
+                  <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
+                    <Building2 className="h-6 w-6 text-gray-400" />
+                  </div>
+                ) : (
+                  <>
+                    {/* Show placeholder while loading */}
+                    {!logoLoaded && (
+                      <div className="absolute left-0 top-0 h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
+                        <Building2 className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
+                    {/* Actual logo */}
+                    <img
+                      src={businessData.avatar_url}
+                      alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
+                      className={`h-12 w-auto bg-white rounded px-1 cursor-pointer transition-opacity duration-200 ${
+                        logoLoaded ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      style={{
+                        filter: "drop-shadow(0 0 0 white)",
+                        mixBlendMode: "multiply",
+                      }}
+                      onLoad={handleLogoLoad}
+                      onError={handleLogoError}
+                    />
+                  </>
+                )}
+              </div>
             </Link>
             
             {/* Business Switcher for Super Admin */}
-            {isSuperAdmin && allBusinesses && allBusinesses.length > 1 && (
+            {isSuperAdmin && filteredBusinesses.length > 1 && (
               <div className="relative z-[99999]" ref={businessDropdownRef}>
                 <button
                   onClick={() => setIsBusinessDropdownOpen(!isBusinessDropdownOpen)}
@@ -93,7 +167,7 @@ export default function Header() {
                       <p className="text-xs text-gray-500">Select a business to manage</p>
                     </div>
                     
-                    {allBusinesses.map((business) => (
+                    {filteredBusinesses.map((business) => (
                       <button
                         key={business.business_id}
                         onClick={() => handleBusinessSwitch(business.business_id)}

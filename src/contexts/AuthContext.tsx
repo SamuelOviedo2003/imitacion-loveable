@@ -46,13 +46,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null
   }
 
-  const fetchBusinessData = async (businessId?: number) => {
+  const fetchBusinessData = async (userProfile?: any) => {
     try {
       let query = supabase.from('business_clients').select('*')
       
-      if (businessId) {
-        query = query.eq('business_id', businessId)
+      // If user has a business_id in their profile, fetch that specific business
+      if (userProfile?.business_id) {
+        query = query.eq('business_id', userProfile.business_id)
       } else {
+        // Otherwise, get the first available business
         query = query.limit(1)
       }
       
@@ -85,6 +87,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null
   }
 
+  const switchBusiness = async (businessId: number) => {
+    if (!user?.id) return
+    
+    try {
+      // Update user's business_id in their profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({ business_id: businessId })
+        .eq('id', user.id)
+      
+      if (!error) {
+        // Update local profile state
+        setUserProfile((prev: any) => prev ? { ...prev, business_id: businessId } : null)
+        
+        // Fetch the new business data
+        await fetchBusinessData({ business_id: businessId })
+      }
+    } catch (error) {
+      console.error('Error switching business:', error)
+    }
+  }
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
@@ -94,11 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(initialSession)
         setUser(initialSession.user)
         
-        // Fetch user profile and business data
+        // Fetch user profile first, then business data based on their business_id
         const profile = await fetchUserProfile(initialSession.user.id)
-        await fetchBusinessData()
+        await fetchBusinessData(profile)
         
-        // If user is Super Admin (role 0), fetch all businesses
+        // If user is Super Admin (role 0), fetch all businesses for the switcher
         if (profile?.role === 0) {
           await fetchAllBusinesses()
         }
@@ -119,9 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session)
           setUser(session.user)
           
-          // Fetch user profile and business data
+          // Fetch user profile first, then business data
           const profile = await fetchUserProfile(session.user.id)
-          await fetchBusinessData()
+          await fetchBusinessData(profile)
           
           // If user is Super Admin (role 0), fetch all businesses
           if (profile?.role === 0) {
@@ -144,10 +168,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe()
     }
   }, [])
-
-  const switchBusiness = async (businessId: number) => {
-    await fetchBusinessData(businessId)
-  }
 
   const signOut = async () => {
     await supabase.auth.signOut()
