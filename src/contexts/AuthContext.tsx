@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchBusinessData = async (userProfile?: any) => {
     try {
-      let query = supabase.from('business_clients').select('*')
+      let query = supabase.from('business_clients').select('business_id, company_name, avatar_url, city, state, time_zone, *')
       
       // If user has a business_id in their profile, fetch that specific business
       if (userProfile?.business_id) {
@@ -139,10 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
         
         if (session?.user) {
-          console.log('Setting user in context:', session.user.email)
           setSession(session)
           setUser(session.user)
           
@@ -155,7 +153,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await fetchAllBusinesses()
           }
         } else {
-          console.log('Clearing user from context')
           setSession(null)
           setUser(null)
           setBusinessData(null)

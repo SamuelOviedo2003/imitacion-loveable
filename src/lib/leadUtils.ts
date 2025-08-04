@@ -26,37 +26,14 @@ export const formatService = (lead: any) => {
   return lead.service_type || lead.service || 'Service'
 }
 
-export const formatDateTime = (lead: any) => {
+export const formatDateTime = (lead: any, timezone?: string) => {
   const date = lead.created_at || lead.date_time || lead.dateTime
   if (date) {
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
-    })
+    return formatDateTimeInTimezone(date, timezone)
   }
   return 'N/A'
 }
 
-export const formatSpeedToLead = (lead: any) => {
-  const speed = lead.speed_to_lead || lead.speedToLead || '0:00'
-  const speedNum = parseInt(speed.split(':')[0]) || 0
-  let speedColor = "text-green-600"
-  if (speedNum > 10) speedColor = "text-red-500"
-  else if (speedNum > 5) speedColor = "text-orange-500"
-  
-  return { speed, speedColor }
-}
-
-export const formatGrade = (lead: any) => {
-  return lead.grade || lead.lead_grade || 'A'
-}
-
-export const formatNextStep = (lead: any) => {
-  return lead.next_step || lead.status || 'Contact'
-}
 
 export const calculateTimeSince = (timestamp: string | Date): string => {
   const now = new Date()
@@ -98,4 +75,53 @@ export const formatAddress = (lead: any): string => {
 export const generateGoogleMapsUrl = (address: string): string => {
   const encodedAddress = encodeURIComponent(address)
   return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
+}
+
+// Timezone utility functions
+export const formatDateTimeInTimezone = (
+  timestamp: string | Date, 
+  timezone?: string,
+  options?: Intl.DateTimeFormatOptions
+): string => {
+  if (!timestamp) return 'N/A'
+  
+  const date = new Date(timestamp)
+  
+  // Default formatting options
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric', 
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }
+  
+  const formatOptions = { ...defaultOptions, ...options }
+  
+  // If timezone is provided, use it; otherwise use browser's local timezone
+  if (timezone) {
+    try {
+      return date.toLocaleDateString('en-US', {
+        ...formatOptions,
+        timeZone: timezone
+      })
+    } catch (error) {
+      console.warn('Invalid timezone provided:', timezone, 'falling back to local timezone')
+    }
+  }
+  
+  return date.toLocaleDateString('en-US', formatOptions)
+}
+
+export const formatCommunicationDateTime = (
+  timestamp: string | Date,
+  timezone?: string
+): string => {
+  return formatDateTimeInTimezone(timestamp, timezone, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true
+  })
 }

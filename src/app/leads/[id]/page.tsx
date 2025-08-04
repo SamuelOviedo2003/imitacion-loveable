@@ -2,19 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ExternalLink, ChevronLeft, ChevronRight, ArrowLeft, Check, X } from "lucide-react"
+import { ExternalLink, ArrowLeft, Check, X } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import Header from "@/components/Header"
 import CommunicationsTable from "@/components/CommunicationsTable"
 import ChatInterface from "@/components/ChatInterface"
 import { useCommunications } from "@/hooks/useCommunications"
+import { useAuth } from "@/contexts/AuthContext"
 import { 
-  calculateTimeSince, 
   formatName, 
   formatUrgency, 
   formatService, 
   formatAddress, 
-  generateGoogleMapsUrl
+  generateGoogleMapsUrl,
+  formatDateTimeInTimezone
 } from "@/lib/leadUtils"
 
 interface House {
@@ -25,10 +26,9 @@ interface House {
 
 export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const { businessData } = useAuth()
   const [lead, setLead] = useState<any>(null)
   const [houses, setHouses] = useState<House[]>([])
-  const [currentHouseIndex, setCurrentHouseIndex] = useState(0)
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   
   const { communications, loading: communicationsLoading } = useCommunications(lead?.account_id || lead?.lead_id)
@@ -125,8 +125,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         if (leadError) throw leadError
         
         // Also try to fetch additional property data from clients table using proper JOIN
-        console.log('🔍 [Lead Detail] Fetching client data via account_id for lead_id:', params.id)
-        console.log('🔍 [Lead Detail] Lead account_id:', supabaseLeadData?.account_id)
         
         let clientData = null
         let clientError = null
@@ -142,9 +140,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           clientData = clientQuery.data
           clientError = clientQuery.error
           
-          console.log('📊 [Lead Detail] Client data result (via account_id):', { clientData, clientError })
         } else {
-          console.warn('⚠️ [Lead Detail] No account_id found in lead data, cannot fetch client data')
         }
         
         if (clientError) {
@@ -164,7 +160,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           })
         }
         
-        console.log('🔄 [Lead Detail] Final merged lead data:', leadData)
       }
 
       setLead(leadData)
@@ -179,13 +174,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         // Use house_url with fallback to noIMAGE.png
         const propertyImageUrl = leadData.house_url || leadData.property_image_url || '/images/noIMAGE.png'
         
-        console.log('🏠 [Lead Detail] Property data setup:', {
-          address,
-          propertyImageUrl,
-          house_value: leadData.house_value,
-          distance_meters: leadData.distance_meters,
-          duration_seconds: leadData.duration_seconds
-        })
         
         setHouses([{
           id: '1',
@@ -203,7 +191,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
 
   const formatAppointmentDate = (lead: any) => {
     if (lead?.start_time) {
-      return new Date(lead.start_time).toLocaleString('en-US', {
+      return formatDateTimeInTimezone(lead.start_time, businessData?.time_zone, {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -251,29 +239,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const nextHouse = () => {
-    setCurrentHouseIndex((prev) => (prev + 1) % houses.length)
-    setCurrentPhotoIndex(0)
-  }
-
-  const prevHouse = () => {
-    setCurrentHouseIndex((prev) => (prev - 1 + houses.length) % houses.length)
-    setCurrentPhotoIndex(0)
-  }
-
-  const nextPhoto = () => {
-    const currentHouse = houses[currentHouseIndex]
-    if (currentHouse) {
-      setCurrentPhotoIndex((prev) => (prev + 1) % currentHouse.photos.length)
-    }
-  }
-
-  const prevPhoto = () => {
-    const currentHouse = houses[currentHouseIndex]
-    if (currentHouse) {
-      setCurrentPhotoIndex((prev) => (prev - 1 + currentHouse.photos.length) % currentHouse.photos.length)
-    }
-  }
 
   if (loading) {
     return (
@@ -302,13 +267,11 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     )
   }
 
-  const timeSinceLead = calculateTimeSince(lead.created_at)
   const leadName = formatName(lead)
   const { urgency } = formatUrgency(lead)
   const service = formatService(lead)
   const address = formatAddress(lead)
   const googleMapsUrl = generateGoogleMapsUrl(address)
-  const currentHouse = houses[currentHouseIndex]
 
   return (
     <div className="min-h-screen bg-gray-50">

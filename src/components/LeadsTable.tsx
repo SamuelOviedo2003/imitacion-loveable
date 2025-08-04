@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,8 +7,9 @@ import {
   formatName, 
   formatUrgency, 
   formatService, 
-  formatDateTime 
+  formatDateTimeInTimezone 
 } from "@/lib/leadUtils"
+import { useAuth } from "@/contexts/AuthContext"
 
 // Mock data - will be replaced with real Supabase data
 const leadsTableData = [
@@ -90,6 +90,7 @@ const getScoreColor = (score: number | null) => {
 
 export default function LeadsTable({ leads }: LeadsTableProps) {
   const router = useRouter()
+  const { businessData } = useAuth()
   const displayLeads = leads.length > 0 ? leads : leadsTableData
 
   const handleRowClick = (lead: any) => {
@@ -121,7 +122,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 const name = formatName(lead)
                 const { urgency, urgencyColor } = formatUrgency(lead)
                 const service = formatService(lead)
-                const dateTime = formatDateTime(lead)
+                const dateTime = formatDateTimeInTimezone(lead.created_at, businessData?.time_zone)
                 const scoreColor = getScoreColor(lead.score)
                 
                 return (

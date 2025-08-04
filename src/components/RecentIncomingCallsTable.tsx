@@ -3,22 +3,14 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { IncomingCall } from '@/hooks/useIncomingCallsData'
+import { useAuth } from "@/contexts/AuthContext"
+import { formatDateTimeInTimezone } from "@/lib/leadUtils"
 
 interface RecentIncomingCallsTableProps {
   calls: IncomingCall[]
   loading: boolean
 }
 
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
-}
 
 const formatDuration = (duration?: number) => {
   if (!duration) return 'N/A'
@@ -50,6 +42,7 @@ const getStatusBadgeStyle = (status?: string) => {
 }
 
 export default function RecentIncomingCallsTable({ calls, loading }: RecentIncomingCallsTableProps) {
+  const { businessData } = useAuth()
   if (loading) {
     return (
       <Card className="bg-white border border-gray-200 shadow-sm">
@@ -102,7 +95,7 @@ export default function RecentIncomingCallsTable({ calls, loading }: RecentIncom
             </thead>
             <tbody>
               {displayCalls.map((call, index) => {
-                const dateTime = formatDateTime(call.created_at)
+                const dateTime = formatDateTimeInTimezone(call.created_at, businessData?.time_zone)
                 const source = call.source?.trim() || 'Unknown'
                 const callerType = call.caller_type?.trim() || 'Unknown'
                 const duration = formatDuration(call.duration)

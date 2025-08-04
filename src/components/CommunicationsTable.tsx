@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 import { Play, Pause } from "lucide-react"
 import { Communication } from "@/hooks/useCommunications"
+import { useAuth } from "@/contexts/AuthContext"
+import { formatCommunicationDateTime } from "@/lib/leadUtils"
 
 interface CommunicationsTableProps {
   communications: Communication[]
@@ -46,6 +48,7 @@ const getMessageTypeColor = (messageType: string) => {
 
 
 export default function CommunicationsTable({ communications, loading }: CommunicationsTableProps) {
+  const { businessData } = useAuth()
   const [audioState, setAudioState] = useState<AudioState>({ 
     playing: false, 
     currentId: null, 
@@ -174,12 +177,7 @@ export default function CommunicationsTable({ communications, loading }: Communi
                 </div>
               </td>
               <td className="py-4 px-6 text-gray-600 text-sm w-32">
-                {new Date(communication.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatCommunicationDateTime(communication.created_at, businessData?.time_zone)}
               </td>
               <td className="py-4 px-6 w-32">
                 {hasRecording ? (
