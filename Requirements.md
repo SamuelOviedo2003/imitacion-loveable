@@ -176,11 +176,11 @@ ORDER BY l.created_at DESC;
 ```
 
 ### Recent Leads Table Columns
-1. **Lead Name**: Avatar with initials + formatted name (`first_name + last_name`)
+1. **Lead Name**: Color-coded score circle + formatted name (`first_name + last_name`)
 2. **How Soon**: Urgency indicator with color coding (red/orange/blue/gray)
 3. **Service**: Service type needed
 4. **Date**: Created date formatted in business timezone (from business_clients.time_zone)
-5. **Score**: Lead quality score with color-coded percentage badges (red/yellow/green)
+5. **Notes**: Lead notes/comments (moved from Score column)
 6. **Status**: Current lead status badge
 
 ### Appointment Setters Component
@@ -194,7 +194,8 @@ ORDER BY l.created_at DESC;
 ### Data Transformations
 - **Name Formatting**: `first_name + " " + last_name` or `first_name` only if last_name missing
 - **Urgency Colors**: Red (ASAP/urgent), Orange (week), Blue (month), Gray (default)
-- **Score Colors**: Red (0-33%), Yellow (34-66%), Green (67-100%)
+- **Score Colors**: Red (0-33%), Yellow (34-66%), Green (67-100%) - displayed in circular avatar
+- **Score Display**: Score shown in color-coded circle next to name instead of separate column
 - **Status Display**: Standardized status badges
 
 ### Edge Cases
@@ -215,25 +216,25 @@ ORDER BY l.created_at DESC;
 - **Navigation**: Back button to return to New Leads
 
 ### UI/UX Behavior
-- **Two-Column Layout**: Lead info + Property image on top row
-- **Score Display**: Top-right corner with color-coded backgrounds
+- **Two-Column Layout**: Lead info left + Property image/score right on top row
+- **Score Display**: Right column below property image with color-coded backgrounds
 - **Communications Table**: Expandable table with audio controls
 - **Back Navigation**: Arrow button to return to New Leads page
 - **Responsive**: Adapts layout for mobile screens
 
-### Lead Information Fields
-- **Basic Info**: Name, email, phone with validation icons
-- **Lead Score**: Color-coded percentage score (Red: 0-33%, Yellow: 34-66%, Green: 67-100%)
+### Lead Information Fields (Left Column)
+- **Basic Info**: Name, email with validation icon (✓/✗), phone
+- **Location Data**: Distance and duration below phone number
+- **Address**: Property address without label, with Google Maps link
 - **Service Details**: Service needed, urgency ("How Soon")
-- **Lead Metadata**: Assigned, setter_name, roof_age, payment_type, source
-- **Email Validation**: Check/X icons instead of Yes/No text
+- **Lead Metadata**: setter_name, roof_age, payment_type, source (Assigned section removed)
 - **Appointment**: Scheduled appointment time display
 
-### Property Information
-- **Property Image**: Display from `house_url` or fallback to `/images/noIMAGE.png`
-- **Address**: Property address with Google Maps link
-- **Value**: Property value display
-- **Location**: Distance (meters) and duration (seconds) when available
+### Property Information (Right Column)
+- **Property Image**: Display from `house_url` or fallback to `/images/noIMAGE.png` at top
+- **Lead Score**: Color-coded percentage score below image (Red: 0-33%, Yellow: 34-66%, Green: 67-100%)
+- **Score Summary**: Detailed explanation text below score percentage
+- **Address Handling**: Uses `property_address` (from `clients.full_address`) with fallback to constructed address from individual components
 
 ### SQL Queries
 ```sql

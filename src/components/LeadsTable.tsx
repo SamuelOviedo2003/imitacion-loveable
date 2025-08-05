@@ -31,6 +31,7 @@ const leadsTableData = [
     urgencyColor: "bg-red-50 text-red-600 border border-red-200",
     email: "john.doe@example.com",
     phone: "(555) 123-4567",
+    notes: "Interested in metal roofing, wants quote ASAP",
   },
   {
     id: "mock-lead-2",
@@ -50,6 +51,7 @@ const leadsTableData = [
     urgencyColor: "bg-yellow-50 text-yellow-600 border border-yellow-200",
     email: "jane.smith@example.com",
     phone: "(555) 234-5678",
+    notes: "Small leak repair needed, budget conscious",
   },
   {
     id: "mock-lead-3",
@@ -69,6 +71,7 @@ const leadsTableData = [
     urgencyColor: "bg-blue-50 text-blue-600 border border-blue-200",
     email: "david.lee@example.com",
     phone: "(555) 345-6789",
+    notes: "Preparing for sale, needs full inspection",
   },
 ]
 
@@ -113,7 +116,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">How Soon</th>
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">Service</th>
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">Date</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Score</th>
+                <th className="text-left py-4 px-6 text-gray-600 font-medium">Notes</th>
                 <th className="text-left py-4 px-6 text-gray-600 font-medium">Status</th>
               </tr>
             </thead>
@@ -133,12 +136,9 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                          <span className="text-gray-600 text-xs font-bold">
-                            {name
-                              .split(" ")
-                              .map((n: string) => n[0])
-                              .join("")}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${scoreColor}`}>
+                          <span className="text-xs font-bold">
+                            {lead.score || 'N/A'}
                           </span>
                         </div>
                         <div>
@@ -152,9 +152,9 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                     <td className="py-4 px-6 text-gray-600">{service}</td>
                     <td className="py-4 px-6 text-gray-600">{dateTime}</td>
                     <td className="py-4 px-6">
-                      <Badge className={`${scoreColor} text-xs font-bold`}>
-                        {lead.score ? `${lead.score}%` : 'N/A'}
-                      </Badge>
+                      <div className="text-gray-600 text-sm max-w-xs truncate" title={lead.notes || 'No notes'}>
+                        {lead.notes || 'No notes'}
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <Badge className="bg-gray-50 text-gray-600 border border-gray-200 text-xs">

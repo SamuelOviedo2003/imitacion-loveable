@@ -57,6 +57,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             duration_seconds: 1200, // 20 minutes
             created_at: "2024-01-01T05:00:00Z",
             email: "john.doe@example.com",
+            email_valid: true,
             phone: "(555) 123-4567",
             street_address: "123 Main St",
             city: "Springfield",
@@ -64,7 +65,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             zip_code: "62701",
             property_address: "123 Main St, Springfield, IL 62701",
             house_url: "/images/house.png",
-            property_image_url: null
+            property_image_url: null,
+            score: 85,
+            score_summary: "High-quality lead with strong interest in metal roofing replacement. Homeowner owns valuable property and has indicated urgent timeline."
           },
           {
             lead_id: "mock-lead-2",
@@ -77,6 +80,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             duration_seconds: 900, // 15 minutes
             created_at: "2024-01-02T06:00:00Z",
             email: "jane.smith@example.com",
+            email_valid: false,
             phone: "(555) 234-5678",
             street_address: "456 Oak Ave",
             city: "Springfield",
@@ -84,7 +88,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             zip_code: "62702",
             property_address: "456 Oak Ave, Springfield, IL 62702",
             house_url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800",
-            property_image_url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800"
+            property_image_url: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800",
+            score: 45,
+            score_summary: "Moderate lead with budget concerns. Homeowner needs minor repairs but is price-conscious. Follow up needed to determine final interest level."
           },
           {
             lead_id: "mock-lead-3",
@@ -97,6 +103,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             duration_seconds: 1800, // 30 minutes
             created_at: "2024-01-03T07:00:00Z",
             email: "david.lee@example.com",
+            email_valid: true,
             phone: "(555) 345-6789",
             street_address: "789 Pine Rd",
             city: "Springfield",
@@ -104,7 +111,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             zip_code: "62703",
             property_address: "789 Pine Rd, Springfield, IL 62703",
             house_url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
-            property_image_url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"
+            property_image_url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
+            score: 22,
+            score_summary: "Initial inquiry for property inspection before sale. Homeowner is exploring options and timeline is flexible. Low urgency but legitimate need."
           }
         ]
         
@@ -270,7 +279,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const leadName = formatName(lead)
   const { urgency } = formatUrgency(lead)
   const service = formatService(lead)
-  const address = formatAddress(lead)
+  // Use property_address first (from clients.full_address), then fall back to formatAddress for individual components
+  const address = lead.property_address || formatAddress(lead)
   const googleMapsUrl = generateGoogleMapsUrl(address)
 
   return (
@@ -302,34 +312,43 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       <div className="flex-1">
                         <h2 className="text-2xl font-bold text-gray-900 mb-3">{leadName}</h2>
                         <div className="space-y-1 text-gray-600">
-                          <p className="text-sm">{lead.email || lead.customer_email || 'No email provided'}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm">{lead.email || lead.customer_email || 'No email provided'}</p>
+                            {lead.email_valid ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <X className="w-4 h-4 text-red-600" />
+                            )}
+                          </div>
                           <p className="text-sm">{lead.phone || lead.phone_number || 'No phone provided'}</p>
+                          
+                          {/* Distance and Duration */}
+                          <div className="flex gap-4 mt-2">
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Distance</p>
+                              <p className="text-sm font-semibold text-gray-900">{formatDistance(lead.distance_meters) || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
+                              <p className="text-sm font-semibold text-gray-900">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Address without label */}
                           {address && (
-                            <a
-                              href={googleMapsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm transition-colors mt-2"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              View on Maps
-                            </a>
+                            <div className="mt-2">
+                              <p className="text-sm">{address}</p>
+                              <a
+                                href={googleMapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm transition-colors mt-1"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                View on Maps
+                              </a>
+                            </div>
                           )}
-                        </div>
-                      </div>
-                      
-                      {/* Lead Score Component */}
-                      <div className={`rounded-lg p-4 border shadow-sm max-w-[65%] max-h-[65%] min-w-[180px] min-h-[120px] ${getScoreBackgroundColor(lead.score)}`}>
-                        <div className="text-center mb-3">
-                          <div className={`text-3xl font-bold mb-1 ${getScoreTextColor(lead.score)}`}>
-                            {lead.score ? `${lead.score}%` : 'N/A'}
-                          </div>
-                          <div className={`text-xs font-medium uppercase tracking-wide ${getScoreTextColor(lead.score)}`}>
-                            Lead Score
-                          </div>
-                        </div>
-                        <div className={`text-xs leading-relaxed text-justify max-h-20 overflow-y-auto ${getScoreTextColor(lead.score)}`}>
-                          {lead.score_summary || 'No score summary available'}
                         </div>
                       </div>
                     </div>
@@ -348,10 +367,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       <p className="text-sm font-semibold text-gray-900">{urgency}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Assigned</p>
-                      <p className="text-sm font-semibold text-gray-900">{lead.assigned || 'N/A'}</p>
-                    </div>
-                    <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Setter Name</p>
                       <p className="text-sm font-semibold text-gray-900">{lead.setter_name || 'N/A'}</p>
                     </div>
@@ -362,16 +377,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Type</p>
                       <p className="text-sm font-semibold text-gray-900">{lead.payment_type || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email Valid</p>
-                      <div className="flex items-center">
-                        {lead.email_valid ? (
-                          <Check className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <X className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Source</p>
@@ -386,9 +391,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            {/* Top Right: Single Property Card */}
+            {/* Top Right: Image and Score Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Property Image */}
+              {/* Lead Image */}
               <div className="relative h-48 bg-white">
                 {houses.length > 0 && houses[0].photos.length > 0 ? (
                   <img
@@ -409,27 +414,18 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                 )}
               </div>
               
-              {/* Property Info */}
-              <div className="p-4">
-                <div className="mb-3">
-                  <h3 className="font-bold text-gray-900 text-lg mb-1">
-                    {lead.property_address || houses[0]?.address || 'Property Address'}
-                  </h3>
-                  <p className="text-gray-600 text-xl font-semibold">{lead.house_value || 'N/A'}</p>
-                </div>
-                
-                {/* Property Details */}
-                <div className="border-t border-gray-100 pt-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Distance</p>
-                      <p className="text-lg font-bold text-green-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Duration</p>
-                      <p className="text-lg font-bold text-blue-600">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
-                    </div>
+              {/* Score and Summary Block */}
+              <div className={`p-4 ${getScoreBackgroundColor(lead.score)}`}>
+                <div className="text-center mb-3">
+                  <div className={`text-3xl font-bold mb-1 ${getScoreTextColor(lead.score)}`}>
+                    {lead.score ? `${lead.score}%` : 'N/A'}
                   </div>
+                  <div className={`text-xs font-medium uppercase tracking-wide ${getScoreTextColor(lead.score)}`}>
+                    Lead Score
+                  </div>
+                </div>
+                <div className={`text-xs leading-relaxed text-justify ${getScoreTextColor(lead.score)}`}>
+                  {lead.score_summary || 'No score summary available'}
                 </div>
               </div>
             </div>
