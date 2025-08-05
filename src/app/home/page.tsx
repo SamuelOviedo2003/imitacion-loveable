@@ -20,7 +20,7 @@ export default function HomePage() {
 
               {/* Description */}
               <p className="text-gray-600 text-lg leading-relaxed max-w-md">
-                "Turning your dreams into reality, one home at a time. Let us guide you to your perfect place."
+                &ldquo;Turning your dreams into reality, one home at a time. Let us guide you to your perfect place.&rdquo;
               </p>
             </div>
 

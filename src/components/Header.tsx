@@ -11,9 +11,8 @@ export default function Header() {
   const { user, businessData, userProfile, allBusinesses, loading, signOut, switchBusiness } = useAuth()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isBusinessDropdownOpen, setIsBusinessDropdownOpen] = useState(false)
-  const [logoLoaded, setLogoLoaded] = useState(false)
-  const [logoError, setLogoError] = useState(false)
-  const [showHeader, setShowHeader] = useState(false)
+  const [showHeader, setShowHeader] = useState(true)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const businessDropdownRef = useRef<HTMLDivElement>(null)
   const logoTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -21,44 +20,12 @@ export default function Header() {
   const router = useRouter()
 
 
-  // Handle logo loading logic and fallback
+  // Only show header when we have business data (no complex loading logic)
   useEffect(() => {
-    if (!businessData) return
-
-    // Reset states when businessData changes
-    setLogoLoaded(false)
-    setLogoError(false)
-    
-    // Show header immediately for better UX
-    setShowHeader(true)
-
-    // Clear any existing timeout
-    if (logoTimeoutRef.current) {
-      clearTimeout(logoTimeoutRef.current)
+    if (businessData) {
+      setShowHeader(true)
     }
-
-    return () => {
-      if (logoTimeoutRef.current) {
-        clearTimeout(logoTimeoutRef.current)
-      }
-    }
-  }, [businessData])
-
-  // Separate effect for handling logo timeout fallback
-  useEffect(() => {
-    if (!businessData?.avatar_url || logoLoaded || logoError) return
-
-    logoTimeoutRef.current = setTimeout(() => {
-      // If logo hasn't loaded after 1 second, assume it's there but cached
-      setLogoLoaded(true)
-    }, 1000)
-
-    return () => {
-      if (logoTimeoutRef.current) {
-        clearTimeout(logoTimeoutRef.current)
-      }
-    }
-  }, [businessData?.avatar_url, logoLoaded, logoError])
+  }, [businessData?.business_id])
 
   // Handle clicking outside the dropdowns to close them
   useEffect(() => {
@@ -79,8 +46,22 @@ export default function Header() {
 
   const handleSignOut = async () => {
     setIsDropdownOpen(false)
-    await signOut()
-    router.push('/')
+    setIsSigningOut(true)
+    try {
+      await signOut()
+      // Wait longer for the signOut to fully complete
+      setTimeout(() => {
+        // Use replace to prevent back navigation to logged-in state
+        window.location.replace('/')
+      }, 500)
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      // Even if there's an error, still try to redirect
+      setTimeout(() => {
+        window.location.replace('/')
+      }, 100)
+    }
+    // Note: Don't set setIsSigningOut(false) since we're redirecting anyway
   }
 
   const isActive = (path: string) => {
@@ -92,80 +73,75 @@ export default function Header() {
     await switchBusiness(businessId)
   }
 
-  const handleLogoLoad = () => {
-    setLogoLoaded(true)
-    if (logoTimeoutRef.current) {
-      clearTimeout(logoTimeoutRef.current)
-    }
-  }
-
-  const handleLogoError = () => {
-    setLogoError(true)
-    if (logoTimeoutRef.current) {
-      clearTimeout(logoTimeoutRef.current)
-    }
-  }
 
   const isSuperAdmin = userProfile?.role === 0
   
   // Filter businesses to only show those with truthy avatar_url
   const filteredBusinesses = allBusinesses?.filter(business => business.avatar_url) || []
   
-  // Simple logging to understand what's happening
-  console.log('Header Debug:', {
-    userRole: userProfile?.role,
-    isSuperAdmin,
-    allBusinessesCount: allBusinesses?.length,
-    filteredBusinessesCount: filteredBusinesses.length,
-    showSwitcher: isSuperAdmin && filteredBusinesses.length > 1
-  })
 
-  // Don't render header until business data is loaded and header should be shown
-  if (loading || !businessData || !showHeader) {
+  // Don't render header until we have a user and not loading
+  if (loading || !user) {
     return null
   }
+
+  // Check if user has no business association
+  const hasNoBusiness = !businessData
 
   return (
     <div className="container mx-auto px-6 pt-6 relative z-50">
       <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg relative">
         <header className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center gap-2">
-            <Link href="/home">
-              <div className="relative h-12 min-w-[48px]">
-                {!businessData.avatar_url || logoError ? (
-                  <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
+            {hasNoBusiness ? (
+              <div className="flex items-center gap-3">
+                <div className="relative h-12 min-w-[48px]">
+                  <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center">
                     <Building2 className="h-6 w-6 text-gray-400" />
                   </div>
-                ) : (
-                  <>
-                    {/* Show placeholder while loading */}
-                    {!logoLoaded && (
-                      <div className="absolute left-0 top-0 h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
-                        <Building2 className="h-6 w-6 text-gray-400" />
-                      </div>
-                    )}
-                    {/* Actual logo */}
+                </div>
+                <div className="text-sm text-gray-500">
+                  <p className="font-medium">No Business Associated</p>
+                  <p className="text-xs">Contact admin to assign business</p>
+                </div>
+              </div>
+            ) : (
+              <Link href="/home">
+                <div className="relative h-12 min-w-[48px]">
+                  {businessData.avatar_url ? (
                     <img
-                      key={`${businessData.business_id}-${businessData.avatar_url}`}
+                      key={`logo-${businessData.business_id}`}
                       src={businessData.avatar_url}
                       alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
-                      className={`h-12 w-auto bg-white rounded px-1 cursor-pointer transition-opacity duration-200 ${
-                        logoLoaded ? 'opacity-100' : 'opacity-0'
-                      }`}
+                      className="h-12 w-auto bg-white rounded px-1 cursor-pointer"
                       style={{
                         filter: "drop-shadow(0 0 0 white)",
                         mixBlendMode: "multiply",
                       }}
-                      onLoad={handleLogoLoad}
-                      onError={handleLogoError}
+                      onError={(e) => {
+                        // Replace with fallback icon on error
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML = `
+                          <div class="h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                          </div>
+                        `;
+                      }}
                     />
-                  </>
-                )}
-              </div>
-            </Link>
+                  ) : (
+                    <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
+                      <Building2 className="h-6 w-6 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </Link>
+            )}
             
             {/* Business Switcher for Super Admin */}
-            {isSuperAdmin && filteredBusinesses.length > 1 && (
+            {!hasNoBusiness && isSuperAdmin && filteredBusinesses.length > 1 && (
               <div className="relative z-[99999]" ref={businessDropdownRef}>
                 <button
                   onClick={() => setIsBusinessDropdownOpen(!isBusinessDropdownOpen)}
@@ -235,46 +211,58 @@ export default function Header() {
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/dashboard" 
-              className={`transition-colors text-sm font-medium ${
-                isActive('/dashboard') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/new-leads"
-              className={`transition-colors text-sm font-medium ${
-                isActive('/new-leads') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
-              }`}
-            >
-              New Leads
-            </Link>
-            <Link 
-              href="/salesman" 
-              className={`transition-colors text-sm font-medium ${
-                isActive('/salesman') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
-              }`}
-            >
-              Salesman
-            </Link>
-            <Link 
-              href="/incoming-calls" 
-              className={`transition-colors text-sm font-medium ${
-                isActive('/incoming-calls') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
-              }`}
-            >
-              Incoming Calls
-            </Link>
-            <Link 
-              href="/fb-analysis" 
-              className={`transition-colors text-sm font-medium ${
-                isActive('/fb-analysis') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
-              }`}
-            >
-              FB Analysis
-            </Link>
+            {hasNoBusiness ? (
+              <>
+                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">Dashboard</span>
+                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">New Leads</span>
+                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">Salesman</span>
+                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">Incoming Calls</span>
+                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">FB Analysis</span>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/dashboard" 
+                  className={`transition-colors text-sm font-medium ${
+                    isActive('/dashboard') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/new-leads"
+                  className={`transition-colors text-sm font-medium ${
+                    isActive('/new-leads') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  New Leads
+                </Link>
+                <Link 
+                  href="/salesman" 
+                  className={`transition-colors text-sm font-medium ${
+                    isActive('/salesman') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  Salesman
+                </Link>
+                <Link 
+                  href="/incoming-calls" 
+                  className={`transition-colors text-sm font-medium ${
+                    isActive('/incoming-calls') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  Incoming Calls
+                </Link>
+                <Link 
+                  href="/fb-analysis" 
+                  className={`transition-colors text-sm font-medium ${
+                    isActive('/fb-analysis') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  FB Analysis
+                </Link>
+              </>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -311,9 +299,10 @@ export default function Header() {
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      disabled={isSigningOut}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Sign Out
+                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
                     </button>
                   </div>
                 )}

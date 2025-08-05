@@ -30,6 +30,7 @@ export default function EditProfileForm() {
     full_name: '',
     avatar_url: ''
   })
+
   
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -155,6 +156,7 @@ export default function EditProfileForm() {
       setSaving(false)
     }
   }
+
 
   if (loading) {
     return (
@@ -295,6 +297,7 @@ export default function EditProfileForm() {
             />
             <p className="text-xs text-gray-500">GoHighLevel ID is managed by the system</p>
           </div>
+
 
 
           {/* Message */}

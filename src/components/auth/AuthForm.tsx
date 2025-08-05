@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/label"
@@ -23,10 +24,13 @@ export function AuthForm() {
 
   // Redirect to home if user is already authenticated
   useEffect(() => {
-    console.log('AuthForm useEffect - authLoading:', authLoading, 'user:', user?.email)
     if (!authLoading && user) {
-      console.log('Redirecting to /home')
-      router.push('/home')
+      // Add a small delay to prevent immediate redirect after logout
+      const timer = setTimeout(() => {
+        router.push('/home')
+      }, 100)
+      
+      return () => clearTimeout(timer)
     }
   }, [user, authLoading, router])
   
@@ -55,19 +59,27 @@ export function AuthForm() {
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/confirm-email`,
             data: {
               full_name: fullName,
             }
           }
         })
         if (error) throw error
-        setMessage('Check your email for the confirmation link!')
+        
+        if (data.user && !data.user.email_confirmed_at) {
+          setMessage('Please check your email and click the confirmation link to activate your account.')
+        } else {
+          setMessage('Account created successfully!')
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (error) throw error
+        
+        // Allow sign in regardless of email confirmation status
         
         setMessage('Signing you in...')
         
@@ -79,11 +91,9 @@ export function AuthForm() {
           const { data: { session } } = await supabase.auth.getSession()
           
           if (session?.user) {
-            console.log('Session confirmed, redirecting to /home')
             setMessage('') // Clear the message before redirect
             try {
               await router.push('/home')
-              console.log('Router.push completed')
             } catch (error) {
               console.error('Router.push failed:', error)
             }
@@ -105,7 +115,6 @@ export function AuthForm() {
         
         // Also set up a backup redirect after 3 seconds regardless
         setTimeout(() => {
-          console.log('Backup redirect triggered after 3 seconds')
           setMessage('') // Clear message before backup redirect
           try {
             router.push('/home')
@@ -140,6 +149,20 @@ export function AuthForm() {
 
         <div className="p-8 lg:p-12 flex flex-col justify-center">
           <div className="w-full max-w-sm mx-auto">
+            {/* Back to Sign In button - only show on Create Account screen */}
+            {isSignUp && (
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="text-sm font-medium">Back to Sign In</span>
+                </button>
+              </div>
+            )}
+
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-slate-900 mb-2">
                 {isSignUp ? 'Create account' : 'Welcome back'}

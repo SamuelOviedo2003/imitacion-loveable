@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useMetrics } from "@/hooks/useMetrics"
 
 export default function SalesmanPage() {
-  const { user, businessData } = useAuth()
+  const { businessData } = useAuth()
   const [timePeriod, setTimePeriod] = useState(30)
 
   const businessId = businessData?.business_id

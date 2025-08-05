@@ -27,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [businessData, setBusinessData] = useState<any | null>(null)
   const [userProfile, setUserProfile] = useState<any | null>(null)
   const [allBusinesses, setAllBusinesses] = useState<any[] | null>(null)
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [lastSignOutTime, setLastSignOutTime] = useState<number | null>(null)
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -115,20 +117,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession()
+      // Don't auto-login if user is in the process of signing out
+      if (isSigningOut) {
+        setLoading(false)
+        return
+      }
       
-      if (initialSession?.user) {
-        setSession(initialSession)
-        setUser(initialSession.user)
+      // Don't auto-login if we just signed out recently (within 5 seconds)
+      if (lastSignOutTime && Date.now() - lastSignOutTime < 5000) {
+        setLoading(false)
+        return
+      }
+      
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession()
         
-        // Fetch user profile first, then business data based on their business_id
-        const profile = await fetchUserProfile(initialSession.user.id)
-        await fetchBusinessData(profile)
-        
-        // If user is Super Admin (role 0), fetch all businesses for the switcher
-        if (profile?.role === 0) {
-          await fetchAllBusinesses()
+        // If there's an error getting session, clear everything
+        if (error) {
+          console.error('Error getting session:', error)
+          setSession(null)
+          setUser(null)
+          setBusinessData(null)
+          setUserProfile(null)
+          setAllBusinesses(null)
+          setLoading(false)
+          return
         }
+        
+        if (initialSession?.user) {
+          // Verify the session is actually valid by checking if user exists
+          const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+          
+          if (userError || !currentUser || currentUser.id !== initialSession.user.id) {
+            // Session is invalid, clear everything
+            console.warn('Invalid session detected, clearing auth state')
+            await supabase.auth.signOut({ scope: 'global' })
+            setSession(null)
+            setUser(null)
+            setBusinessData(null)
+            setUserProfile(null)
+            setAllBusinesses(null)
+            setLoading(false)
+            return
+          }
+          
+          setSession(initialSession)
+          setUser(initialSession.user)
+          
+          // Fetch user profile first, then business data based on their business_id
+          const profile = await fetchUserProfile(initialSession.user.id)
+          await fetchBusinessData(profile)
+          
+          // If user is Super Admin (role 0), fetch all businesses for the switcher
+          if (profile?.role === 0) {
+            await fetchAllBusinesses()
+          }
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error)
+        // Clear everything on error
+        setSession(null)
+        setUser(null)
+        setBusinessData(null)
+        setUserProfile(null)
+        setAllBusinesses(null)
       }
       
       setLoading(false)
@@ -139,8 +191,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Handle specific auth events
+        if (event === 'SIGNED_OUT') {
+          setSession(null)
+          setUser(null)
+          setBusinessData(null)
+          setUserProfile(null)
+          setAllBusinesses(null)
+          setIsSigningOut(false)
+          setLoading(false)
+          return
+        }
         
-        if (session?.user) {
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Only update if it's the same user
+          if (user && user.id === session.user.id) {
+            setSession(session)
+            setUser(session.user)
+          }
+          setLoading(false)
+          return
+        }
+        
+        if (session?.user && !isSigningOut && (!lastSignOutTime || Date.now() - lastSignOutTime > 5000)) {
+          // Only auto-login if not in the middle of signing out and not recently signed out
+          
+          // If we already have a different user, clear everything first
+          if (user && user.id !== session.user.id) {
+            console.log('Different user detected, clearing previous session')
+            setSession(null)
+            setUser(null)
+            setBusinessData(null)
+            setUserProfile(null)
+            setAllBusinesses(null)
+          }
+          
           setSession(session)
           setUser(session.user)
           
@@ -152,7 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (profile?.role === 0) {
             await fetchAllBusinesses()
           }
-        } else {
+        } else if (!session) {
           setSession(null)
           setUser(null)
           setBusinessData(null)
@@ -167,11 +252,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [user?.id, isSigningOut, lastSignOutTime])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    // State will be updated automatically by the auth state change listener
+    try {
+      setIsSigningOut(true)
+      setLoading(true)
+      setLastSignOutTime(Date.now())
+      
+      // Clear local state first to prevent any race conditions
+      setSession(null)
+      setUser(null)
+      setBusinessData(null)
+      setUserProfile(null)
+      setAllBusinesses(null)
+      
+      // Then sign out from Supabase with global scope
+      const { error } = await supabase.auth.signOut({ scope: 'global' })
+      if (error) {
+        console.error('Supabase signOut error:', error)
+        // Don't throw error, continue with cleanup
+      }
+      
+      // Additional cleanup: Clear any Supabase tokens from localStorage
+      try {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth')) {
+            localStorage.removeItem(key)
+          }
+        })
+        
+        // Also clear sessionStorage
+        const sessionKeys = Object.keys(sessionStorage)
+        sessionKeys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth')) {
+            sessionStorage.removeItem(key)
+          }
+        })
+      } catch (storageError) {
+        console.warn('Could not clear localStorage/sessionStorage:', storageError)
+      }
+      
+      // Force clear any cookies
+      try {
+        document.cookie.split(";").forEach((c) => {
+          const eqPos = c.indexOf("=")
+          const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim()
+          if (name.includes('supabase') || name.includes('auth') || name.includes('sb-')) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+          }
+        })
+      } catch (cookieError) {
+        console.warn('Could not clear cookies:', cookieError)
+      }
+      
+    } catch (error) {
+      console.error('Error signing out:', error)
+      // Ensure state is cleared even on error
+      setSession(null)
+      setUser(null)
+      setBusinessData(null)
+      setUserProfile(null)
+      setAllBusinesses(null)
+    } finally {
+      setLoading(false)
+      setIsSigningOut(false)
+      
+      // Force page reload to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+    }
   }
 
   const value = {

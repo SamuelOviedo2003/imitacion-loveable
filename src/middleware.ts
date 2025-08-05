@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function middleware(_request: NextRequest) {
   // Temporarily disable middleware to avoid any conflicts with authentication
   // Let client-side ProtectedLayout handle all authentication checks
   
-  // Avoid using nextUrl.pathname in Edge Runtime to prevent Node.js url module usage
-  const pathname = new URL(request.url).pathname
-  console.log('Middleware called for:', pathname)
   
   return NextResponse.next()
 }

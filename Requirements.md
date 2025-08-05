@@ -3,13 +3,15 @@
 ## Table of Contents
 - [Authentication & User Management](#authentication--user-management)
 - [Universal Header](#universal-header)
+- [Home Page](#home-page)
 - [Dashboard](#dashboard)
 - [New Leads](#new-leads)
 - [Lead Details](#lead-details)
 - [Communications](#communications)
 - [Incoming Calls](#incoming-calls)
-- [FB Analysis](#fb-analysis)
 - [Salesman](#salesman)
+- [FB Analysis](#fb-analysis)
+- [Settings](#settings)
 - [Database Schema](#database-schema)
 - [Error Handling & Edge Cases](#error-handling--edge-cases)
 
@@ -18,29 +20,46 @@
 ## Authentication & User Management
 
 ### Functional Requirements
-- **Login System**: Users authenticate via Supabase Auth
+- **Login System**: Users authenticate via Supabase Auth with email/password
 - **Session Management**: Persistent sessions with automatic token refresh
-- **Protected Routes**: All pages except login require authentication
-- **Business Data Association**: Each user is associated with business data from `business_clients` table
+- **Protected Routes**: All pages except login require authentication via ProtectedLayout
+- **User Roles**: Support for different user roles including Super Admin (role 0)
+- **Business Association**: Each user associated with business data from `business_clients` table
+- **Profile Management**: Users can update profile information and avatar
 
 ### UI/UX Behavior
 - **Login Redirect**: Unauthenticated users redirect to login page
+- **Post-Auth Redirect**: Successful login redirects to `/home` page
 - **Loading States**: Show loading indicators during auth state changes
 - **User Profile**: Header displays user email initial in circular avatar
 - **Sign Out**: Dropdown menu with sign out option
+- **Business Switcher**: Super Admins can switch between businesses (dropdown in header)
+
+### Authentication Flow
+1. User lands on login page (`/` route)
+2. Users can sign in regardless of email confirmation status
+3. After successful authentication, redirect to `/home`
+4. Protected pages use `ProtectedLayout` wrapper
+5. `AuthContext` manages global auth state
+6. Business data loaded automatically after authentication
 
 ### SQL Queries
 ```sql
--- Fetch business data for authenticated user
-SELECT * FROM business_clients LIMIT 1;
+-- Fetch user profile
+SELECT * FROM profiles WHERE id = $userId;
 
--- User profile data comes from Supabase Auth
+-- Fetch business data for authenticated user
+SELECT * FROM business_clients WHERE business_id = $businessId;
+
+-- Super Admin: Fetch all businesses with avatars
+SELECT * FROM business_clients WHERE avatar_url IS NOT NULL;
 ```
 
 ### Edge Cases
-- **Failed Authentication**: Redirect to login with error message
+- **Failed Authentication**: Show error message, remain on login page
 - **Session Expiry**: Automatic logout and redirect to login
 - **Missing Business Data**: Show loading state until business data loads
+- **Super Admin**: Show business switcher if multiple businesses available
 
 ---
 
@@ -48,27 +67,58 @@ SELECT * FROM business_clients LIMIT 1;
 
 ### Functional Requirements
 - **Company Logo**: Display business logo from `business_clients.avatar_url`
-- **Navigation Menu**: Links to all main sections
-- **User Profile**: Show authenticated user info with dropdown
-- **Active State**: Highlight current page in navigation
+- **Navigation Menu**: Links to all main sections with active state highlighting
+- **User Profile**: Show authenticated user info with dropdown menu
+- **Business Switcher**: For Super Admins with multiple businesses
+- **Settings Access**: Settings link in user dropdown
 
 ### UI/UX Behavior
-- **Logo Loading**: Header waits for business data before rendering (prevents logo flash)
+- **Static Display**: Header remains completely static during navigation (no logo flickering)
+- **Logo Loading**: Business logo loads directly without loading states or placeholders
 - **Fixed Height**: Logo maintains `h-12` height for consistency
 - **Responsive**: Navigation collapses on mobile (hidden md:flex)
 - **Hover States**: Interactive elements have hover effects
+- **Active State**: Current page highlighted in navigation
 
-### Navigation Links
-- Dashboard
-- New Leads
-- Salesman
-- Incoming Calls
-- FB Analysis
+### Navigation Links (in order)
+1. **Dashboard** - Overview and key metrics
+2. **New Leads** - Lead management with metrics and appointment setters  
+3. **Salesman** - Revenue metrics and performance analytics
+4. **Incoming Calls** - Call analytics and visualizations
+5. **FB Analysis** - Facebook advertising analysis (placeholder)
+
+### Business Switcher (Super Admin Only)
+- **Trigger**: Shows when user has role 0 and multiple businesses available
+- **Display**: Dropdown with business names and avatars
+- **Functionality**: Switch active business context
+- **Visual**: Current business highlighted
 
 ### Edge Cases
 - **Page Refresh**: Entire header waits for logo before showing (no partial rendering)
 - **Missing Logo**: Show loading placeholder until business data available
 - **Long Company Names**: Truncate if necessary
+- **Single Business**: No switcher shown even for Super Admin
+
+---
+
+## Home Page
+
+### Functional Requirements
+- **Welcome Interface**: Clean landing page after authentication
+- **Property Showcase**: Hero section with property imagery
+- **Navigation**: Clear path to main application sections
+
+### UI/UX Behavior
+- **Hero Layout**: Split layout with content left, image right
+- **Professional Design**: Clean, modern real estate focused design
+- **Call to Action**: Engaging copy and imagery
+- **Responsive**: Adapts to all screen sizes
+
+### Content Elements
+- **Headline**: Property management focused messaging
+- **Description**: Value proposition for lead management
+- **Property Image**: High-quality house imagery
+- **Navigation**: Easy access to main application features
 
 ---
 
@@ -77,10 +127,12 @@ SELECT * FROM business_clients LIMIT 1;
 ### Functional Requirements
 - **Under Construction**: Currently shows placeholder content
 - **Future State**: Will display key metrics and overview charts
+- **Protected Access**: Requires authentication
 
 ### UI/UX Behavior
-- **Centered Layout**: Simple centered message
-- **Protected Route**: Requires authentication
+- **Centered Layout**: Simple centered message indicating development status
+- **Protected Route**: Uses ProtectedLayout wrapper
+- **Navigation**: Accessible from header navigation
 
 ---
 
@@ -88,24 +140,32 @@ SELECT * FROM business_clients LIMIT 1;
 
 ### Functional Requirements
 - **Lead Metrics Display**: Show total leads, contacted leads, booked leads, contact rate, booking rate
-- **Appointment Setters Component**: Display appointment setter performance metrics with vertical carousel
-- **Recent Leads Table**: Display leads with pagination/filtering capabilities
-- **Time Period Filter**: 30, 60, or 90 days
+- **Appointment Setters Carousel**: Display appointment setter performance with vertical navigation
+- **Recent Leads Table**: Display leads with clickable rows for navigation
+- **Time Period Filter**: 30, 60, or 90 days selection
 - **Lead Navigation**: Click on lead to open Lead Details view
 
 ### UI/UX Behavior
+- **Grid Layout**: 2x2 grid with LeadsTable spanning full width at bottom
 - **Loading States**: Show loading indicators while fetching data
 - **Metrics Cards**: Display key performance indicators in card format
-- **Interactive Table**: Hover effects on table rows
+- **Interactive Table**: Hover effects on table rows, click to navigate
 - **Date Filter**: Dropdown selector in top-right corner
+
+### Layout Structure
+- **Top Left**: `LeadMetrics` component
+- **Top Right**: `AppointmentSetters` component  
+- **Bottom**: `LeadsTable` component (full width)
 
 ### SQL Queries
 ```sql
 -- Main leads query with time filter
-SELECT * FROM leads 
-WHERE created_at >= $startDateISO 
-AND business_id = $businessId
-ORDER BY created_at DESC;
+SELECT l.*, c.full_address, c.house_value, c.house_url, c.distance_meters, c.duration_seconds
+FROM leads l
+LEFT JOIN clients c ON l.account_id = c.account_id
+WHERE l.created_at >= $startDateISO 
+AND l.business_id = $businessId
+ORDER BY l.created_at DESC;
 
 -- Calculate metrics from leads data
 -- Total leads: COUNT(*)
@@ -116,71 +176,72 @@ ORDER BY created_at DESC;
 ```
 
 ### Recent Leads Table Columns
-1. **Lead Name**: Formatted from `first_name + last_name`
-2. **How Soon**: Urgency indicator with color coding
+1. **Lead Name**: Avatar with initials + formatted name (`first_name + last_name`)
+2. **How Soon**: Urgency indicator with color coding (red/orange/blue/gray)
 3. **Service**: Service type needed
-4. **Date**: Created date formatted as "Jan 1, 5:00 AM"
-5. **Score**: Lead quality score with color-coded percentage badges
-6. **Status**: Current lead status
+4. **Date**: Created date formatted in business timezone (from business_clients.time_zone)
+5. **Score**: Lead quality score with color-coded percentage badges (red/yellow/green)
+6. **Status**: Current lead status badge
+
+### Appointment Setters Component
+- **Type**: Vertical carousel (single item display)
+- **Navigation**: Up/down arrows with pagination counter ("1/3")
+- **Sorting**: Performance-based (booked appointments descending)
+- **Structure**: Mirrors LeadMetrics layout exactly for visual symmetry
+- **Fixed Height**: Uses `h-full` class to maintain layout balance
+- **Statistics**: Leads, contacted, booked, contact rate, booking rate per setter
 
 ### Data Transformations
 - **Name Formatting**: `first_name + " " + last_name` or `first_name` only if last_name missing
-- **Urgency Colors**: Red (ASAP), Orange (week), Blue (month), Gray (default)
+- **Urgency Colors**: Red (ASAP/urgent), Orange (week), Blue (month), Gray (default)
 - **Score Colors**: Red (0-33%), Yellow (34-66%), Green (67-100%)
 - **Status Display**: Standardized status badges
 
-### Appointment Setters Component (New Leads Page)
-- **Layout**: Right side of grid layout, symmetrical with Lead Metrics
-- **Display**: Vertical carousel showing one setter at a time
-- **Navigation**: Up/down arrows with pagination counter (e.g., "1/3")
-- **Sorting**: Sorted by booked appointments in descending order (best performers first)
-- **Structure**: Mirrors LeadMetrics component layout exactly
-- **Statistics**: Leads, contacted, booked, contact rate, booking rate
-- **Fixed Height**: Maintains visual balance regardless of content
-
 ### Edge Cases
 - **No Data**: Show "No leads found" message
-- **Loading**: Show loading spinners
+- **Loading**: Show loading spinners in each component
 - **Missing Fields**: Handle null values gracefully (show "N/A" or "Unknown")
+- **Empty Setters**: Show message when no appointment setters available
 
 ---
 
 ## Lead Details
 
 ### Functional Requirements
-- **Lead Information Display**: Show complete lead profile
-- **Property Information**: Display property details and image
-- **Communications History**: Show all communications for this lead
-- **Real-time Updates**: Communications update in real-time
+- **Lead Information Display**: Complete lead profile with score component
+- **Property Information**: Display property details and image with location data
+- **Communications History**: Show all communications with audio playback
+- **Chat Interface**: Send new messages (UI only)
+- **Navigation**: Back button to return to New Leads
 
 ### UI/UX Behavior
 - **Two-Column Layout**: Lead info + Property image on top row
-- **Expandable Communications**: Table expands based on content (no internal scroll)
-- **Fixed Chat Interface**: Chat input remains at bottom
-- **Navigation**: Back navigation to leads list
+- **Score Display**: Top-right corner with color-coded backgrounds
+- **Communications Table**: Expandable table with audio controls
+- **Back Navigation**: Arrow button to return to New Leads page
+- **Responsive**: Adapts layout for mobile screens
 
 ### Lead Information Fields
-- **Basic Info**: Name, email, phone
-- **Lead Score Component**: Color-coded percentage score display in top-right corner with dynamic backgrounds (Red: 0-33%, Yellow: 34-66%, Green: 67-100%)
-- **Service Details**: Service needed, urgency (labeled as "How Soon")
-- **Lead Metadata**: Assigned, setter_name, roof_age, payment_type, email_valid (displayed as check/X icons), source
-- **Appointment**: Scheduled appointment time
-- **Navigation**: Back button with arrow icon to return to New Leads page
+- **Basic Info**: Name, email, phone with validation icons
+- **Lead Score**: Color-coded percentage score (Red: 0-33%, Yellow: 34-66%, Green: 67-100%)
+- **Service Details**: Service needed, urgency ("How Soon")
+- **Lead Metadata**: Assigned, setter_name, roof_age, payment_type, source
+- **Email Validation**: Check/X icons instead of Yes/No text
+- **Appointment**: Scheduled appointment time display
 
 ### Property Information
-- **Property Image**: Display from `house_url` or fallback to no-image placeholder
+- **Property Image**: Display from `house_url` or fallback to `/images/noIMAGE.png`
 - **Address**: Property address with Google Maps link
-- **Value**: Property value
-- **Location**: Distance and duration (shown in right panel)
+- **Value**: Property value display
+- **Location**: Distance (meters) and duration (seconds) when available
 
 ### SQL Queries
 ```sql
--- Main lead query
-SELECT * FROM leads WHERE lead_id = $leadId;
-
--- Property data from clients table
-SELECT house_value, distance_meters, house_url, full_address, duration_seconds 
-FROM clients WHERE account_id = $accountId;
+-- Main lead query with property data
+SELECT l.*, c.house_value, c.distance_meters, c.house_url, c.full_address, c.duration_seconds
+FROM leads l
+LEFT JOIN clients c ON l.account_id = c.account_id
+WHERE l.lead_id = $leadId;
 
 -- Communications for this lead
 SELECT * FROM communications 
@@ -192,98 +253,137 @@ ORDER BY created_at ASC;
 - **Missing Property Data**: Show fallback values ("N/A", default image)
 - **No Communications**: Show "No communications recorded" message
 - **Invalid Lead ID**: Show "Lead not found" with back button
+- **Missing Score**: Handle null/undefined scores gracefully
 
 ---
 
 ## Communications
 
 ### Functional Requirements
-- **Communications Table**: Display all communications chronologically
-- **Audio Playback**: Play recording files with seek functionality and progress bars
-- **Message Type Indicators**: Visual badges for different communication types
-- **Chronological Sorting**: Sort by created_at (oldest to newest)
-- **Audio Progress Control**: Visual progress bar with time display and click-to-seek functionality
+- **Communications Display**: Chronological list of all communications
+- **Audio Playback**: Play recording files with progress bars and seek functionality
+- **Message Type Indicators**: Color-coded badges for different communication types
+- **Time Display**: Formatted timestamps
+- **Progress Control**: Visual progress bars with click-to-seek
 
 ### UI/UX Behavior
 - **No Internal Scroll**: Table expands vertically based on content
-- **Audio Controls**: Play/pause buttons with seek functionality and progress visualization
-- **Progress Bars**: Visual progress indicators with current time and total duration
-- **Type Badges**: Color-coded badges for different message types
+- **Audio Controls**: Play/pause buttons with seek functionality
+- **Progress Visualization**: Current time display and total duration
+- **Type Badges**: Color-coded badges for message types
 - **Hover Effects**: Row highlighting on hover
 
 ### Table Columns
 1. **Type**: Message type with color-coded badge
 2. **Summary**: Communication summary or content
-3. **Created**: Date/time formatted as "Jan 1, 5:00 AM"
-4. **Audio**: Play/pause controls with progress bar, time display, and seek functionality
+3. **Created**: Date/time formatted in business timezone (from business_clients.time_zone)
+4. **Audio**: Play/pause controls with progress bar and seek functionality
 
 ### Message Type Colors
 - **Email**: Blue (`bg-blue-50 text-blue-600 border-blue-200`)
-- **SMS/Text**: Green (`bg-green-50 text-green-600 border-green-200`)
+- **SMS/Text**: Green (`bg-green-50 text-green-600 border-green-200`)  
 - **Call/Phone**: Purple (`bg-purple-50 text-purple-600 border-purple-200`)
 - **Voicemail**: Orange (`bg-orange-50 text-orange-600 border-orange-200`)
 - **Default**: Gray (`bg-gray-50 text-gray-600 border-gray-200`)
 
-### SQL Queries
-```sql
--- Communications for lead (sorted chronologically)
-SELECT * FROM communications 
-WHERE account_id = $accountId 
-ORDER BY created_at ASC;
-```
+### Audio Functionality
+- **Progress Bars**: Visual representation of playback progress
+- **Seek Control**: Click on progress bar to jump to specific time
+- **Time Display**: Current time / total duration
+- **Multiple Audio**: Individual state management per communication
+- **Error Handling**: Graceful handling of missing/failed audio files
 
 ### Edge Cases
 - **No Communications**: Show placeholder message
 - **Missing Audio**: Disable play button, show grayed out icon
 - **Audio Playback Errors**: Handle failed audio loading gracefully
+- **Long Summaries**: Wrap text appropriately
 
 ---
 
 ## Incoming Calls
 
 ### Functional Requirements
-- **Call Analytics**: Visual charts and data analysis
-- **Source Distribution**: Chart showing call sources
-- **Caller Type Distribution**: Chart showing types of callers
-- **Sankey Diagram**: Flow from sources to caller types
+- **Call Analytics Dashboard**: Visual charts and data analysis
+- **Source Distribution Chart**: Pie chart showing call sources
+- **Caller Type Distribution Chart**: Pie chart showing caller types
+- **Sankey Flow Diagram**: Flow from sources to caller types
 - **Recent Calls Table**: List of recent incoming calls
-- **Time Period Filter**: 30, 60, or 90 days
+- **Time Period Filter**: 30, 60, or 90 days selection
 
 ### UI/UX Behavior
-- **Dashboard Layout**: Charts in grid layout
-- **Interactive Charts**: Hover effects and tooltips
-- **Data Table**: Scrollable table with call details
+- **Dashboard Layout**: Charts arranged in responsive grid
+- **Interactive Charts**: Hover effects and tooltips using Recharts
+- **Data Table**: Clean table with call details
+- **Filter Controls**: Time period dropdown in header
 
 ### Charts & Visualizations
 
 #### Source Distribution Chart
-- **Type**: Pie/Donut chart
-- **Data**: Call counts by source
-- **Shows**: Distribution of where calls are coming from
+- **Type**: Pie chart using Recharts
+- **Data**: Call counts aggregated by source
+- **Filtering**: Excludes null/empty/"Unknown" sources
+- **Colors**: Custom color palette for segments
 
-#### Caller Type Distribution Chart  
-- **Type**: Pie/Donut chart
-- **Data**: Call counts by caller type
-- **Shows**: Types of people calling (e.g., leads, customers, etc.)
+#### Caller Type Distribution Chart
+- **Type**: Pie chart using Recharts  
+- **Data**: Call counts aggregated by caller type
+- **Filtering**: Excludes null/empty/"Unknown" caller types
+- **Colors**: Custom color palette for segments
 
-#### Sankey Diagram
-- **Type**: Flow diagram
+#### Sankey Flow Diagram
+- **Type**: Flow diagram using D3 and d3-sankey
 - **Data**: Relationships between sources and caller types
-- **Shows**: How different sources convert to different caller types
-- **Filtering**: Excludes "Unknown" values
+- **Filtering**: Excludes "Unknown" values from both dimensions
+- **Interactive**: Hover effects and tooltips
 
 ### SQL Queries
 ```sql
--- Incoming calls data
+-- Incoming calls data with time filtering
 SELECT * FROM incoming_calls 
 WHERE created_at >= $startDate 
 ORDER BY created_at DESC;
 ```
 
 ### Data Processing
-- **Source Filtering**: Remove null/empty/"Unknown" sources
-- **Caller Type Filtering**: Remove null/empty/"Unknown" caller types
+- **Source Aggregation**: Group by source, count occurrences
+- **Caller Type Aggregation**: Group by caller_type, count occurrences
+- **Sankey Data**: Create source-to-caller-type relationships
+- **Filtering**: Remove null/empty/"Unknown" values
 - **Percentage Calculations**: Calculate percentages for chart displays
+
+### Edge Cases
+- **No Data**: Show "No calls found" message in charts and table
+- **Loading**: Show loading spinners while fetching data
+- **Missing Fields**: Handle null sources/caller types gracefully
+- **Chart Rendering**: Handle empty datasets without errors
+
+---
+
+## Salesman
+
+### Functional Requirements
+- **Revenue Metrics Display**: Comprehensive revenue and performance analytics
+- **Time Period Filter**: 30, 60, or 90 days selection
+- **Performance Tracking**: Revenue, conversion rates, sales team metrics
+- **Date-based Filtering**: Dynamic data updates based on selected time period
+
+### UI/UX Behavior
+- **Metrics Dashboard**: Clean layout with key performance indicators
+- **Interactive Filters**: Time period dropdown selector
+- **Loading States**: Show loading indicators while fetching data
+- **Card Layout**: Metrics displayed in organized card components
+
+### Metrics Display
+- **Revenue Tracking**: Total revenue and trends
+- **Conversion Rates**: Lead to sale conversion percentages
+- **Performance Analytics**: Team and individual performance metrics
+- **Time Comparisons**: Period-over-period analysis
+
+### Edge Cases
+- **No Data**: Show appropriate empty state messages
+- **Loading**: Loading indicators during data fetch
+- **Missing Metrics**: Handle null/undefined values gracefully
 
 ---
 
@@ -291,23 +391,60 @@ ORDER BY created_at DESC;
 
 ### Functional Requirements
 - **Under Construction**: Currently placeholder content
-- **Future State**: Facebook advertising analysis and metrics
+- **Future State**: Facebook advertising analysis and ROI metrics
+- **Protected Access**: Requires authentication
+
+### UI/UX Behavior
+- **Placeholder Layout**: Simple centered message
+- **Future Integration**: Will integrate with Facebook Marketing API
+- **Navigation**: Accessible from header navigation
 
 ---
 
-## Salesman
+## Settings
 
 ### Functional Requirements
-- **Revenue Metrics Display**: Show comprehensive revenue and performance metrics (moved from New Leads page)
-- **Time Period Filter**: 30, 60, or 90 days selection
-- **Performance Analytics**: Revenue tracking, conversion rates, and sales team metrics
-- **Date-based Filtering**: Dynamic data filtering based on selected time periods
+- **Two-Section Layout**: Settings and General sections in vertical menu
+- **Profile Management**: Edit user profile information in Settings section
+- **Avatar Upload**: Upload and manage profile pictures
+- **Account Deletion**: Delete Profile functionality in General section
+- **Form Validation**: Validate inputs before submission
 
 ### UI/UX Behavior
-- **Metrics Dashboard**: Clean dashboard layout with key performance indicators
-- **Interactive Filters**: Dropdown time period selector
-- **Loading States**: Show loading indicators while fetching data
-- **Responsive Design**: Adapts to different screen sizes
+- **Vertical Menu**: Left sidebar with grouped sections (Settings, General)
+- **Form Layout**: Clean form design with proper spacing
+- **Image Upload**: Drag and drop or click to upload avatar
+- **Validation**: Real-time form validation with error messages
+- **Save States**: Loading indicators during save operations
+- **Confirmation Flow**: Two-step confirmation for profile deletion
+
+### Settings Section
+- **Edit Profile Info**: Form for updating user information
+- **Full Name**: Text input for display name
+- **Email**: Email input (read-only from auth)
+- **Avatar**: Image upload with preview
+- **Telegram ID**: Read-only system field
+- **GHL ID**: Read-only system field
+
+### General Section
+- **Delete Profile**: Account deletion with safety confirmation
+- **Confirmation Required**: User must type "DELETE" to confirm
+- **Immediate Cleanup**: Removes profile data and signs out user
+- **Warning Display**: Clear warnings about data loss
+
+### Delete Profile Flow
+1. User clicks "Delete My Profile" button
+2. Confirmation form appears requiring "DELETE" text input
+3. User types "DELETE" and clicks "Permanently Delete Profile"
+4. System removes user from profiles table
+5. User is signed out and redirected to login page
+
+### Edge Cases
+- **Upload Errors**: Handle image upload failures gracefully
+- **Validation Errors**: Show specific error messages
+- **Save Failures**: Handle network errors during save operations
+- **Delete Failures**: Show specific error messages with retry option
+- **Incomplete Confirmation**: Disable delete button until "DELETE" is typed
 
 ---
 
@@ -318,28 +455,78 @@ ORDER BY created_at DESC;
 #### leads
 - **Primary Key**: `lead_id`
 - **Foreign Key**: `account_id` → `clients.account_id`
-- **Key Fields**: `first_name`, `last_name`, `email`, `phone`, `service`, `how_soon` (formerly urgency), `created_at`, `assigned`, `setter_name`, `roof_age`, `payment_type`, `email_valid`, `source`, `score`, `status`
+- **Key Fields**: 
+  - `first_name`, `last_name` - Lead name
+  - `email`, `phone` - Contact information
+  - `service` - Service needed
+  - `how_soon` - Urgency indicator
+  - `score`, `status` - Lead quality and current status
+  - `created_at` - Lead creation timestamp
+  - `assigned`, `setter_name` - Assignment information
+  - `roof_age`, `payment_type`, `email_valid`, `source` - Additional metadata
+  - `business_id` - Business association
 
 #### clients
 - **Primary Key**: `account_id`
-- **Related Data**: `house_value`, `distance_meters`, `house_url`, `full_address`, `duration_seconds`
+- **Related Data**: 
+  - `full_address` - Property address
+  - `house_value` - Property value
+  - `house_url` - Property image URL
+  - `distance_meters`, `duration_seconds` - Location data
 
 #### communications
 - **Primary Key**: `communication_id`
 - **Foreign Key**: `account_id` → `clients.account_id`
-- **Key Fields**: `message_type`, `summary`, `recording_url`, `created_at`
+- **Key Fields**:
+  - `message_type` - Type of communication
+  - `summary` - Communication content
+  - `recording_url` - Audio recording URL
+  - `created_at` - Communication timestamp
 
 #### business_clients
 - **Primary Key**: `business_id`
-- **Key Fields**: `company_name`, `avatar_url` (for header logo)
+- **Key Fields**:
+  - `company_name` - Business name
+  - `avatar_url` - Business logo URL
+  - `time_zone` - Business timezone for date/time display
+  - `city`, `state` - Business location
+  - Configuration and settings fields
 
-#### leads_calls
-- **Composite Relationship**: Links to `leads.lead_id`
-- **Key Fields**: `assigned`, `duration`, `time_speed`, `created_at`
+#### profiles
+- **Primary Key**: `id` (UUID from auth.users)
+- **Key Fields**:
+  - `email`, `full_name` - User information
+  - `avatar_url` - User profile picture
+  - `role` - User role (0 = Super Admin)
+  - `business_id` - Associated business
 
 #### incoming_calls
-- **Independent Table**: Call tracking data
-- **Key Fields**: `source`, `caller_type`, `created_at`, `account_id`
+- **Primary Key**: `incoming_call_id`
+- **Key Fields**:
+  - `source` - Call source
+  - `caller_type` - Type of caller
+  - `created_at` - Call timestamp
+  - `account_id` - Optional lead association
+
+### Common Query Patterns
+```sql
+-- Lead with property data
+SELECT l.*, c.full_address, c.house_value, c.house_url, c.distance_meters, c.duration_seconds
+FROM leads l
+LEFT JOIN clients c ON l.account_id = c.account_id
+WHERE l.lead_id = ?;
+
+-- Communications for lead
+SELECT * FROM communications 
+WHERE account_id = (SELECT account_id FROM leads WHERE lead_id = ?)
+ORDER BY created_at ASC;
+
+-- User profile with business
+SELECT p.*, bc.company_name, bc.avatar_url
+FROM profiles p
+JOIN business_clients bc ON p.business_id = bc.business_id
+WHERE p.id = ?;
+```
 
 ---
 
@@ -348,39 +535,44 @@ ORDER BY created_at DESC;
 ### Authentication Errors
 - **Failed Login**: Show error message, remain on login page
 - **Session Expired**: Automatic logout, redirect to login
-- **Network Issues**: Show connection error message
+- **Network Issues**: Show connection error with retry option
 
 ### Data Loading States
 - **Initial Load**: Show loading spinners/skeletons
-- **Empty States**: "No data found" messages with appropriate icons
-- **Failed Requests**: Error messages with retry options
+- **Empty States**: "No data found" messages with appropriate context
+- **Failed Requests**: Error messages with retry buttons
+- **Partial Failures**: Handle partial data loads gracefully
 
 ### Form Validation
 - **Required Fields**: Highlight missing required fields
-- **Invalid Data**: Show validation error messages
-- **Network Errors**: Handle failed submissions gracefully
+- **Invalid Data**: Show specific validation error messages
+- **Network Errors**: Handle failed submissions with retry options
+- **File Uploads**: Validate file types and sizes
 
 ### Performance Considerations
 - **Large Datasets**: Implement pagination where needed
-- **Real-time Updates**: Optimize WebSocket connections
-- **Image Loading**: Lazy loading for property images
-- **Audio Files**: Progressive loading for recordings
+- **Real-time Updates**: Optimize Supabase real-time subscriptions
+- **Image Loading**: Lazy loading for property and profile images
+- **Audio Files**: Progressive loading for communication recordings
 
 ### Browser Compatibility
 - **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
 - **JavaScript Required**: Graceful degradation for disabled JS
 - **Mobile Responsive**: All layouts adapt to mobile screens
+- **Touch Interfaces**: Proper touch targets and gestures
 
 ---
 
 ## Development Notes
 
 ### Technology Stack
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
-- **State Management**: React Context API
-- **Charts**: Custom chart components
-- **Audio**: HTML5 Audio API
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Real-time, Storage)
+- **State Management**: React Context API (AuthContext)
+- **Charts**: Recharts (pie charts), D3 + d3-sankey (flow diagrams)
+- **Audio**: HTML5 Audio API with custom controls
+- **Icons**: Lucide React
+- **Styling**: Tailwind CSS with custom components
 
 ### Code Organization
 - **Pages**: App Router structure in `/src/app/`
@@ -388,13 +580,24 @@ ORDER BY created_at DESC;
 - **Hooks**: Custom hooks in `/src/hooks/`
 - **Utils**: Utility functions in `/src/lib/`
 - **Contexts**: React contexts in `/src/contexts/`
+- **Types**: TypeScript interfaces and types
+- **UI Components**: Reusable UI components in `/src/components/ui/`
 
-### Quality Assurance
-- **Testing**: Component and integration testing required
-- **Performance**: Monitor loading times and optimize as needed
-- **Accessibility**: WCAG compliance for all interactive elements
-- **Security**: Validate all inputs, sanitize outputs, protect against SQL injection
+### Quality Standards
+- **TypeScript**: Strict typing throughout application
+- **Component Structure**: Consistent component patterns
+- **Error Boundaries**: Proper error handling
+- **Loading States**: Consistent loading indicators
+- **Accessibility**: WCAG compliance for interactive elements
+- **Security**: Input validation, sanitization, XSS protection
+
+### Performance Optimizations
+- **Bundle Size**: Tree shaking and code splitting
+- **Image Optimization**: Next.js Image component where appropriate
+- **Database Queries**: Optimized queries with proper indexing
+- **Caching**: Appropriate caching strategies
+- **Real-time**: Efficient Supabase subscriptions
 
 ---
 
-*This document serves as the definitive guide for development, testing, and feature validation.*
+*This document serves as the definitive guide for development, testing, and feature validation. All implementations should align with these specifications.*

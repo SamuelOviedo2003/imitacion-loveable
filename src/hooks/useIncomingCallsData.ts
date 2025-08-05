@@ -166,7 +166,6 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
 
   const fetchData = async () => {
     try {
-      console.log('🔍 [useIncomingCallsData] Starting fetch...', { userId, timePeriod })
       setLoading(true)
       setError(null)
 
@@ -180,11 +179,6 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
       startDate.setDate(startDate.getDate() - timePeriod)
       const startDateISO = startDate.toISOString()
 
-      console.log('📅 [useIncomingCallsData] Date range:', { 
-        timePeriod, 
-        startDate: startDateISO,
-        endDate: new Date().toISOString() 
-      })
 
       // Fetch incoming_calls data (RLS policy will automatically filter by business_id)
       const { data: callsData, error: callsError } = await supabase
@@ -199,7 +193,6 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
         return
       }
 
-      console.log('✅ [useIncomingCallsData] Fetched', callsData?.length || 0, 'incoming calls')
       
       const calls = callsData || []
       setCalls(calls)

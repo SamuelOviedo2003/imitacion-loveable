@@ -15,7 +15,8 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/')
+      // Use replace instead of push to prevent back navigation issues
+      router.replace('/')
     }
   }, [user, loading, router])
 

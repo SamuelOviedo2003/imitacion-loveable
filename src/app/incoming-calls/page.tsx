@@ -23,14 +23,6 @@ export default function IncomingCallsPage() {
     error
   } = useIncomingCallsData(user?.id, timePeriod)
 
-  console.log('🏠 [IncomingCallsPage] Rendering with:', {
-    userId: user?.id,
-    userEmail: user?.email,
-    callsCount: calls.length,
-    timePeriod,
-    loading,
-    error
-  })
 
   return (
     <ProtectedLayout>

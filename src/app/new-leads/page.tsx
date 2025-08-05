@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useMetrics } from "@/hooks/useMetrics"
 
 export default function NewLeadsPage() {
-  const { user, businessData } = useAuth()
+  const { businessData } = useAuth()
   const [timePeriod, setTimePeriod] = useState(30)
 
   const businessId = businessData?.business_id
