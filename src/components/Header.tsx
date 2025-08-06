@@ -95,9 +95,9 @@ export default function Header() {
           <div className="flex items-center gap-4">
             {hasNoBusiness ? (
               <div className="flex items-center gap-4">
-                <div className="relative h-16 min-w-[64px]">
-                  <div className="h-16 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-sm">
-                    <Building2 className="h-8 w-8 text-gray-500" />
+                <div className="relative h-20 min-w-[80px]">
+                  <div className="h-20 w-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-sm">
+                    <Building2 className="h-10 w-10 text-gray-500" />
                   </div>
                 </div>
                 <div className="text-sm">
@@ -107,9 +107,9 @@ export default function Header() {
               </div>
             ) : (
               <Link href="/home">
-                <div className="relative h-16 min-w-[64px] group">
+                <div className="relative h-20 min-w-[80px] group">
                   {businessData.avatar_url ? (
-                    <div className="h-16 w-16 bg-white rounded-xl shadow-md p-2 group-hover:shadow-lg transition-shadow duration-200">
+                    <div className="h-20 w-20 bg-white rounded-xl shadow-md p-2 group-hover:shadow-lg transition-shadow duration-200">
                       <img
                         key={`logo-${businessData.business_id}`}
                         src={businessData.avatar_url}
@@ -130,8 +130,8 @@ export default function Header() {
                       />
                     </div>
                   ) : (
-                    <div className="h-16 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center cursor-pointer shadow-md group-hover:shadow-lg transition-shadow duration-200">
-                      <Building2 className="h-8 w-8 text-gray-500" />
+                    <div className="h-20 w-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center cursor-pointer shadow-md group-hover:shadow-lg transition-shadow duration-200">
+                      <Building2 className="h-10 w-10 text-gray-500" />
                     </div>
                   )}
                 </div>

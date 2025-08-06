@@ -56,8 +56,8 @@ export default function IncomingCallsPage() {
   return (
     <ProtectedLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50/30">
-        <div className="container mx-auto px-6 py-10">
-          <div className="space-y-10">
+        <div className="container mx-auto px-6 py-6">
+          <div className="space-y-6">
             {/* Modern Header */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
               <div className="text-center md:text-left">

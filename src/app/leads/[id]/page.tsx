@@ -6,7 +6,6 @@ import { ExternalLink, ArrowLeft, Check, X } from "lucide-react"
 import { supabase } from '@/lib/supabase'
 import Header from "@/components/Header"
 import CommunicationsTable from "@/components/CommunicationsTable"
-import ChatInterface from "@/components/ChatInterface"
 import { useCommunications } from "@/hooks/useCommunications"
 import { useAuth } from "@/contexts/AuthContext"
 import { 
@@ -286,7 +285,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       <Header />
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-8 py-6">
         {/* Modern Back Button */}
         <div className="mb-8">
           <button
@@ -298,7 +297,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           </button>
         </div>
         
-        <div className="space-y-10">
+        <div className="space-y-6">
           {/* Header Section */}
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-3">Lead Details</h1>
@@ -477,15 +476,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               communications={communications} 
               loading={communicationsLoading} 
             />
-            
-            {/* Message Input Section */}
-            <div className="modern-card">
-              <div className="mb-4">
-                <h4 className="text-lg font-semibold text-gray-900">Send New Message</h4>
-                <p className="text-sm text-gray-600">Compose and send a message to this lead</p>
-              </div>
-              <ChatInterface />
-            </div>
           </div>
         </div>
       </div>

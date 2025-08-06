@@ -39,8 +39,8 @@ export default function NewLeadsPage() {
   return (
     <ProtectedLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
-        <div className="container mx-auto px-6 py-10">
-          <div className="space-y-8">
+        <div className="container mx-auto px-6 py-6">
+          <div className="space-y-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
               <div>

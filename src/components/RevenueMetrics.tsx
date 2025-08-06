@@ -13,17 +13,13 @@ interface RevenueMetricsProps {
 
 const RevenueMetrics = React.memo(function RevenueMetrics({ revenueMetrics }: RevenueMetricsProps) {
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-white rounded-lg shadow-sm">
-          <DollarSign className="w-5 h-5 text-emerald-600" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-gray-900">Revenue Metrics</h3>
-          <p className="text-xs text-gray-600">Sales performance overview</p>
-        </div>
+    <div className="modern-card pastel-card-mint">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Revenue Metrics</h3>
+        <p className="text-gray-600">Sales performance and earnings overview</p>
       </div>
+      
+      <div className="space-y-4">{/* Header Removed - Now integrated into card header */}
 
       {/* Statistics Cards - Modern Style */}
       <div className="space-y-3">
@@ -74,6 +70,7 @@ const RevenueMetrics = React.memo(function RevenueMetrics({ revenueMetrics }: Re
             </span>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

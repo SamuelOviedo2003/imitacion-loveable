@@ -200,51 +200,53 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
 
   if (loading) {
     return (
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
-            <div className="relative cursor-help p-1 rounded hover:bg-gray-100">
-              <Info className="h-4 w-4 text-gray-500" />
+      <div className="modern-card pastel-card-lavender">
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2">
+            <h3 className="text-2xl font-bold text-gray-900">Source to Caller Type Flow</h3>
+            <div className="relative cursor-help p-1 rounded-xl hover:bg-white/50 transition-colors">
+              <Info className="h-5 w-5 text-gray-500" />
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+          <p className="text-gray-600">Interactive flow visualization of call sources and caller types</p>
+        </div>
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-purple-100/50 p-8">
           <div className="flex items-center justify-center h-[500px]">
-            <div className="animate-pulse text-gray-500">Loading diagram...</div>
+            <div className="animate-pulse text-gray-500 text-lg font-medium">Loading diagram...</div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
   if (!data.nodes.length || !data.links.length) {
     return (
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
-            <div className="relative cursor-help p-1 rounded hover:bg-gray-100">
-              <Info className="h-4 w-4 text-gray-500" />
+      <div className="modern-card pastel-card-lavender">
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2">
+            <h3 className="text-2xl font-bold text-gray-900">Source to Caller Type Flow</h3>
+            <div className="relative cursor-help p-1 rounded-xl hover:bg-white/50 transition-colors">
+              <Info className="h-5 w-5 text-gray-500" />
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+          <p className="text-gray-600">Interactive flow visualization of call sources and caller types</p>
+        </div>
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-purple-100/50 p-8">
           <div className="flex items-center justify-center h-[500px]">
-            <div className="text-gray-500">No relationship data available</div>
+            <div className="text-gray-500 text-lg font-medium">No relationship data available</div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-gray-900">Source to Caller Type Relationship</CardTitle>
+    <div className="modern-card pastel-card-lavender">
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2">
+          <h3 className="text-2xl font-bold text-gray-900">Source to Caller Type Flow</h3>
           <div 
-            className="relative cursor-help p-1 rounded hover:bg-gray-100"
+            className="relative cursor-help p-1 rounded-xl hover:bg-white/50 transition-colors"
             onMouseEnter={(e) => {
               setInfoTooltip({
                 visible: true,
@@ -265,11 +267,12 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
               }
             }}
           >
-            <Info className="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors" />
+            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors" />
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
+        <p className="text-gray-600">Interactive flow visualization of call sources and caller types</p>
+      </div>
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-purple-100/50 p-8">
         <div className="flex justify-center w-full">
           <svg 
             ref={svgRef}
@@ -310,7 +313,7 @@ export default function SourceToCallerTypeSankey({ data, loading }: SourceToCall
             The width of each flow represents the number of calls. Hover over nodes and links for detailed information.
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

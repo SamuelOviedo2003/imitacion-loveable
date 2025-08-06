@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Play, Pause } from "lucide-react"
+import { Play, Pause, Send } from "lucide-react"
 import { Communication } from "@/hooks/useCommunications"
 import { useAuth } from "@/contexts/AuthContext"
 import { formatCommunicationDateTime } from "@/lib/leadUtils"
@@ -55,6 +55,7 @@ export default function CommunicationsTable({ communications, loading }: Communi
     duration: 0, 
     currentTime: 0 
   })
+  const [message, setMessage] = useState("")
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Update progress
@@ -133,6 +134,20 @@ export default function CommunicationsTable({ communications, loading }: Communi
     const minutes = Math.floor(time / 60)
     const seconds = Math.floor(time % 60)
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  const handleSendMessage = () => {
+    if (message.trim()) {
+      // Handle sending message logic here
+      setMessage("")
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
   }
 
   if (loading) {
@@ -250,6 +265,35 @@ export default function CommunicationsTable({ communications, loading }: Communi
             })}
           </tbody>
         </table>
+      </div>
+      
+      {/* Integrated Chat Interface */}
+      <div className="border-t border-gray-100/50 bg-white/80 backdrop-blur-sm p-6">
+        <div className="mb-4">
+          <h4 className="text-lg font-semibold text-gray-900">Send New Message</h4>
+          <p className="text-sm text-gray-600">Compose and send a message to this lead</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!message.trim()}
+            className={`p-3 rounded-xl transition-all duration-200 shadow-sm ${
+              message.trim()
+                ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   )

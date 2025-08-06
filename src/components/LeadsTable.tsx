@@ -159,11 +159,11 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                       <span className="text-gray-700 font-medium">{service}</span>
                     </td>
                     <td className="py-5 px-6">
-                      <span className="text-gray-600 text-sm">{dateTime}</span>
+                      <span className="text-gray-700 font-medium">{dateTime}</span>
                     </td>
                     <td className="py-5 px-6">
                       <div className="max-w-xs">
-                        <p className="text-gray-600 text-sm truncate" title={lead.notes || 'No notes available'}>
+                        <p className="text-gray-700 font-medium truncate" title={lead.notes || 'No notes available'}>
                           {lead.notes || 'No notes available'}
                         </p>
                       </div>

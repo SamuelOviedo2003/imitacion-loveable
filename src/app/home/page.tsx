@@ -26,15 +26,6 @@ export default function HomePage() {
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button className="modern-button modern-button-primary">
-                  Get Started
-                </button>
-                <button className="modern-button-secondary">
-                  Learn More
-                </button>
-              </div>
             </div>
 
             {/* Right Content - House Image */}
