@@ -3,6 +3,7 @@
 import { useState, lazy, Suspense, useMemo } from "react"
 import { ChevronDown } from "lucide-react"
 import ProtectedLayout from "@/components/ProtectedLayout"
+import LoadingScreen from "@/components/LoadingScreen"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 // Lazy load heavy chart components with better error handling
 const SourceDistributionChart = lazy(() => import("@/components/SourceDistributionChart").catch(() => ({ default: () => <div className="h-80 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">Chart failed to load</div> })))
@@ -29,14 +30,22 @@ export default function IncomingCallsPage() {
 
   // Optimize loading fallbacks with better UX
   const loadingFallback = useMemo(() => (
-    <div className="h-80 bg-gray-50 rounded-lg animate-pulse flex items-center justify-center">
-      <div className="text-gray-500 text-sm">Loading...</div>
+    <div className="h-80 bg-gray-50 rounded-lg flex items-center justify-center">
+      <LoadingScreen 
+        message="Loading chart..."
+        size="md"
+        showMessage={false}
+      />
     </div>
   ), [])
 
   const tableLoadingFallback = useMemo(() => (
-    <div className="h-64 bg-gray-50 rounded-lg animate-pulse flex items-center justify-center">
-      <div className="text-gray-500 text-sm">Loading table...</div>
+    <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+      <LoadingScreen 
+        message="Loading table..."
+        size="md"
+        showMessage={false}
+      />
     </div>
   ), [])
 

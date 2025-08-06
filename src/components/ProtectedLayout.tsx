@@ -4,13 +4,14 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
+import LoadingOverlay from '@/components/LoadingOverlay'
 
 interface ProtectedLayoutProps {
   children: React.ReactNode
 }
 
 export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
-  const { user, loading } = useAuth()
+  const { user, loading, isInitializing } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -22,9 +23,21 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center" style={{ backgroundColor: "#E8F4F8" }}>
-        <div className="animate-pulse text-gray-600">Loading...</div>
-      </div>
+      <LoadingOverlay 
+        message="Setting up your workspace..." 
+        show={true}
+        blur={false}
+      />
+    )
+  }
+
+  if (isInitializing) {
+    return (
+      <LoadingOverlay 
+        message="Welcome back! Preparing your dashboard..." 
+        show={true}
+        blur={false}
+      />
     )
   }
 

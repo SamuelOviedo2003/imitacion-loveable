@@ -11,6 +11,7 @@ interface AuthState {
   businessData: any | null
   userProfile: any | null
   allBusinesses: any[] | null
+  isInitializing: boolean
 }
 
 interface AuthContextType extends AuthState {
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [allBusinesses, setAllBusinesses] = useState<any[] | null>(null)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [lastSignOutTime, setLastSignOutTime] = useState<number | null>(null)
+  const [isInitializing, setIsInitializing] = useState(false)
 
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
@@ -225,6 +227,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setAllBusinesses(null)
           }
           
+          // Show initialization screen for new logins
+          if (!user || user.id !== session.user.id) {
+            setIsInitializing(true)
+          }
+          
           setSession(session)
           setUser(session.user)
           
@@ -236,6 +243,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (profile?.role === 0) {
             await fetchAllBusinesses()
           }
+          
+          // Complete initialization
+          setIsInitializing(false)
         } else if (!session) {
           setSession(null)
           setUser(null)
@@ -333,9 +343,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     businessData,
     userProfile,
     allBusinesses,
+    isInitializing,
     signOut,
     switchBusiness,
-  }), [user, session, loading, businessData, userProfile, allBusinesses])
+  }), [user, session, loading, businessData, userProfile, allBusinesses, isInitializing])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

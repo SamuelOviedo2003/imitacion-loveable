@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import ProtectedLayout from "@/components/ProtectedLayout"
 import RevenueMetrics from "@/components/RevenueMetrics"
+import LoadingScreen from "@/components/LoadingScreen"
 import { useAuth } from "@/contexts/AuthContext"
 import { useMetrics } from "@/hooks/useMetrics"
 
@@ -21,8 +22,11 @@ export default function SalesmanPage() {
   if (metricsLoading) {
     return (
       <ProtectedLayout>
-        <div className="container mx-auto px-6 py-8 flex items-center justify-center">
-          <div className="text-gray-600">Loading metrics...</div>
+        <div className="container mx-auto px-6 py-8 flex items-center justify-center min-h-[60vh]">
+          <LoadingScreen 
+            message="Loading revenue metrics..."
+            size="lg"
+          />
         </div>
       </ProtectedLayout>
     )
