@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [lastSignOutTime, setLastSignOutTime] = useState<number | null>(null)
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user profile:', error)
     }
     return null
-  }
+  }, [])
 
   const fetchBusinessData = async (userProfile?: any) => {
     try {
@@ -106,8 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Fetch the new business data
         await fetchBusinessData({ business_id: businessId })
         
-        // Force a page reload to refresh all content with new business data
-        window.location.reload()
+        // No need to reload - React will re-render components with new business data
       }
     } catch (error) {
       console.error('Error switching business:', error)
@@ -326,7 +325,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     user,
     session,
     loading,
@@ -335,7 +335,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     allBusinesses,
     signOut,
     switchBusiness,
-  }
+  }), [user, session, loading, businessData, userProfile, allBusinesses])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

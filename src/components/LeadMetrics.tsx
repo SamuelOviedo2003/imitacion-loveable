@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -13,7 +14,7 @@ interface LeadMetricsProps {
   }
 }
 
-export default function LeadMetrics({ leadMetrics }: LeadMetricsProps) {
+const LeadMetrics = React.memo(function LeadMetrics({ leadMetrics }: LeadMetricsProps) {
   return (
     <Card className="bg-white border border-gray-200 shadow-sm">
       <CardHeader>
@@ -54,4 +55,6 @@ export default function LeadMetrics({ leadMetrics }: LeadMetricsProps) {
       </CardContent>
     </Card>
   )
-}
+})
+
+export default LeadMetrics

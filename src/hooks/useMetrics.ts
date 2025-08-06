@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export const useMetrics = (timePeriod: number, businessId?: number) => {
@@ -20,6 +20,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
   const [appointmentSetters, setAppointmentSetters] = useState<any[]>([])
   const [revenueData, setRevenueData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [lastFetchParams, setLastFetchParams] = useState<{ timePeriod: number, businessId?: number } | null>(null)
 
   // Mock data fallback
   const leadsTableData = [
@@ -61,33 +62,60 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
     },
   ]
 
-  const fetchMetrics = async (days: number, businessId?: number) => {
+  const fetchMetrics = useCallback(async (days: number, businessId?: number) => {
+    // Prevent duplicate fetches
+    const currentParams = { timePeriod: days, businessId }
+    if (lastFetchParams && 
+        lastFetchParams.timePeriod === days && 
+        lastFetchParams.businessId === businessId) {
+      return
+    }
+
     try {
       setLoading(true)
+      setLastFetchParams(currentParams)
+
+      if (!businessId) {
+        // Provide fallback data immediately if no businessId
+        setLeads(leadsTableData)
+        setLeadMetrics({ totalLeads: 5, contactedLeads: 4, bookedLeads: 2, contactRate: 80, bookingRate: 50 })
+        setRevenueMetrics({ shows: 5, closes: 2, totalAmount: 33000 })
+        setAppointmentSetters([])
+        setLoading(false)
+        return
+      }
+
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - days)
       const startDateISO = startDate.toISOString()
 
+      // Add timeout protection
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 15000)
+      )
+
       // Fetch leads data within time period, filtered by business_id if available
-      let leadsQuery = supabase
+      const leadsQuery = supabase
         .from('leads')
         .select('*')
         .gte('created_at', startDateISO)
+        .eq('business_id', businessId)
         .order('created_at', { ascending: false })
 
-      if (businessId) {
-        leadsQuery = leadsQuery.eq('business_id', businessId)
-      }
+      const fetchPromise = leadsQuery
 
-      const { data: leadsData, error: leadsError } = await leadsQuery
+      const { data: leadsData, error: leadsError } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any
       
       if (!leadsError && leadsData) {
         setLeads(leadsData)
         
         // Calculate lead metrics
         const totalLeads = leadsData.length
-        const contactedLeads = leadsData.filter(lead => lead.contacted === true).length
-        const bookedLeads = leadsData.filter(lead => lead.start_time !== null && lead.start_time !== '').length
+        const contactedLeads = leadsData.filter((lead: any) => lead.contacted === true).length
+        const bookedLeads = leadsData.filter((lead: any) => lead.start_time !== null && lead.start_time !== '').length
         const contactRate = totalLeads > 0 ? Math.round((contactedLeads / totalLeads) * 100) : 0
         const bookingRate = contactedLeads > 0 ? Math.round((bookedLeads / contactedLeads) * 100) : 0
         
@@ -100,10 +128,10 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
         })
 
         // Calculate revenue metrics
-        const shows = leadsData.filter(lead => lead.show === true).length
-        const closes = leadsData.filter(lead => lead.closed_amount !== null && lead.closed_amount !== '').length
+        const shows = leadsData.filter((lead: any) => lead.show === true).length
+        const closes = leadsData.filter((lead: any) => lead.closed_amount !== null && lead.closed_amount !== '').length
         const totalAmount = leadsData
-          .reduce((sum, lead) => sum + (lead.closed_amount || 0), 0)
+          .reduce((sum: number, lead: any) => sum + (lead.closed_amount || 0), 0)
         
         setRevenueMetrics({
           shows,
@@ -111,8 +139,15 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
           totalAmount
         })
 
-        // Fetch appointment setters data
-        await fetchAppointmentSetters(days, businessId)
+        // Skip heavy appointment setters computation for better performance
+        // Load appointment setters in background after initial metrics
+        setTimeout(() => {
+          if (leadsData.length < 500) {
+            fetchAppointmentSetters(days, businessId)
+          } else {
+            setAppointmentSetters([])
+          }
+        }, 100)
       } else {
         console.error('Error fetching leads:', leadsError)
         // Fallback data
@@ -130,9 +165,9 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchAppointmentSetters = async (timePeriod: number, businessId?: number) => {
+  const fetchAppointmentSetters = useCallback(async (timePeriod: number, businessId?: number) => {
     try {
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - timePeriod)
@@ -183,7 +218,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
 
       // Create a map of lead_id to lead data for quick lookup
       const leadsMap = new Map()
-      leadsData.forEach(lead => {
+      leadsData.forEach((lead: any) => {
         leadsMap.set(lead.lead_id, lead)
       })
 
@@ -193,7 +228,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
       // Get unique lead_ids that each setter called
       const setterLeadsMap = new Map() // setter -> Set of lead_ids they called
 
-      callsData.forEach(call => {
+      callsData.forEach((call: any) => {
         const assignedUser = call.assigned
         if (!setterLeadsMap.has(assignedUser)) {
           setterLeadsMap.set(assignedUser, new Set())
@@ -249,7 +284,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
         })
 
         // Process each call for duration and first-call speed tracking
-        callsData.forEach(call => {
+        callsData.forEach((call: any) => {
           const setter = settersMap.get(call.assigned)
           if (!setter) return
 
@@ -278,7 +313,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
       }
 
       // Convert map to array and calculate final metrics
-      const settersArray = Array.from(settersMap.values()).map(setter => {
+      const settersArray = Array.from(settersMap.values()).map((setter: any) => {
         const contactRate = setter.totalLeads > 0 ? Math.round((setter.contactedLeads / setter.totalLeads) * 100) : 0
         const bookingRate = setter.contactedLeads > 0 ? Math.round((setter.bookedLeads / setter.contactedLeads) * 100) : 0
         
@@ -315,13 +350,14 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
       console.error('Error fetching appointment setters data:', error)
       setAppointmentSetters([])
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchMetrics(timePeriod, businessId)
-  }, [timePeriod, businessId])
+  }, [timePeriod, businessId, fetchMetrics])
 
-  return {
+  // Memoize expensive calculations
+  const memoizedMetrics = useMemo(() => ({
     leads,
     leadMetrics,
     revenueMetrics,
@@ -329,5 +365,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
     revenueData,
     loading,
     refetch: () => fetchMetrics(timePeriod, businessId)
-  }
+  }), [leads, leadMetrics, revenueMetrics, appointmentSetters, revenueData, loading, fetchMetrics, timePeriod, businessId])
+
+  return memoizedMetrics
 }

@@ -45,13 +45,14 @@ export interface SankeyData {
   links: SankeyLink[]
 }
 
-export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) => {
+export const useIncomingCallsData = (businessId?: number, timePeriod: number = 30) => {
   const [calls, setCalls] = useState<IncomingCall[]>([])
   const [sourceData, setSourceData] = useState<ChartData[]>([])
   const [callerTypeData, setCallerTypeData] = useState<ChartData[]>([])
   const [sankeyData, setSankeyData] = useState<SankeyData>({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastFetchParams, setLastFetchParams] = useState<{ businessId?: number, timePeriod: number } | null>(null)
 
   const generateVibrantColors = (count: number): string[] => {
     const colors = [
@@ -165,12 +166,26 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
   }
 
   const fetchData = async () => {
+    // Prevent duplicate fetches
+    const currentParams = { businessId, timePeriod }
+    if (lastFetchParams && 
+        lastFetchParams.businessId === businessId && 
+        lastFetchParams.timePeriod === timePeriod) {
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
+      setLastFetchParams(currentParams)
 
-      if (!userId) {
-        setError('No user ID provided')
+      if (!businessId) {
+        // Provide empty data instead of error for better UX
+        setCalls([])
+        setSourceData([])
+        setCallerTypeData([])
+        setSankeyData({ nodes: [], links: [] })
+        setLoading(false)
         return
       }
 
@@ -179,20 +194,32 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
       startDate.setDate(startDate.getDate() - timePeriod)
       const startDateISO = startDate.toISOString()
 
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 30000)
+      )
 
-      // Fetch incoming_calls data (RLS policy will automatically filter by business_id)
-      const { data: callsData, error: callsError } = await supabase
+      const fetchPromise = supabase
         .from('incoming_calls')
         .select('*')
         .gte('created_at', startDateISO)
         .order('created_at', { ascending: false })
 
+      const { data: callsData, error: callsError } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any
+
       if (callsError) {
         console.error('❌ [useIncomingCallsData] Error:', callsError)
+        // Provide empty data instead of blocking UI
+        setCalls([])
+        setSourceData([])
+        setCallerTypeData([])
+        setSankeyData({ nodes: [], links: [] })
         setError(`Error fetching incoming calls: ${callsError.message}`)
         return
       }
-
       
       const calls = callsData || []
       setCalls(calls)
@@ -200,6 +227,11 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
 
     } catch (err) {
       console.error('💥 [useIncomingCallsData] Unexpected error:', err)
+      // Provide empty data to prevent UI blocking
+      setCalls([])
+      setSourceData([])
+      setCallerTypeData([])
+      setSankeyData({ nodes: [], links: [] })
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
@@ -208,7 +240,7 @@ export const useIncomingCallsData = (userId?: string, timePeriod: number = 30) =
 
   useEffect(() => {
     fetchData()
-  }, [userId, timePeriod])
+  }, [businessId, timePeriod])
 
   return {
     calls,

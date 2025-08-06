@@ -1,18 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, lazy, Suspense, useMemo } from "react"
 import { ChevronDown } from "lucide-react"
 import ProtectedLayout from "@/components/ProtectedLayout"
-import SourceDistributionChart from "@/components/SourceDistributionChart"
-import CallerTypeDistributionChart from "@/components/CallerTypeDistributionChart"
-import SourceToCallerTypeSankey from "@/components/SourceToCallerTypeSankey"
-import RecentIncomingCallsTable from "@/components/RecentIncomingCallsTable"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+// Lazy load heavy chart components with better error handling
+const SourceDistributionChart = lazy(() => import("@/components/SourceDistributionChart").catch(() => ({ default: () => <div className="h-80 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">Chart failed to load</div> })))
+const CallerTypeDistributionChart = lazy(() => import("@/components/CallerTypeDistributionChart").catch(() => ({ default: () => <div className="h-80 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">Chart failed to load</div> })))
+const SourceToCallerTypeSankey = lazy(() => import("@/components/SourceToCallerTypeSankey").catch(() => ({ default: () => <div className="h-80 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">Diagram failed to load</div> })))
+const RecentIncomingCallsTable = lazy(() => import("@/components/RecentIncomingCallsTable").catch(() => ({ default: () => <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">Table failed to load</div> })))
 import { useAuth } from "@/contexts/AuthContext"
 import { useIncomingCallsData } from "@/hooks/useIncomingCallsData"
 
 export default function IncomingCallsPage() {
-  const { user } = useAuth()
+  const { businessData } = useAuth()
   const [timePeriod, setTimePeriod] = useState(30)
+
+  const businessId = businessData?.business_id
 
   const {
     calls,
@@ -21,7 +25,23 @@ export default function IncomingCallsPage() {
     sankeyData,
     loading,
     error
-  } = useIncomingCallsData(user?.id, timePeriod)
+  } = useIncomingCallsData(businessId, timePeriod)
+
+  // Optimize loading fallbacks with better UX
+  const loadingFallback = useMemo(() => (
+    <div className="h-80 bg-gray-50 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="text-gray-500 text-sm">Loading...</div>
+    </div>
+  ), [])
+
+  const tableLoadingFallback = useMemo(() => (
+    <div className="h-64 bg-gray-50 rounded-lg animate-pulse flex items-center justify-center">
+      <div className="text-gray-500 text-sm">Loading table...</div>
+    </div>
+  ), [])
+
+  // Show skeleton UI instead of blocking the entire page
+  const isInitialLoad = loading && !calls.length && !error
 
 
   return (
@@ -62,23 +82,45 @@ export default function IncomingCallsPage() {
           )}
 
 
-          {/* Charts Grid */}
-          {!error && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <SourceDistributionChart data={sourceData} loading={loading} />
-              <CallerTypeDistributionChart data={callerTypeData} loading={loading} />
-            </div>
-          )}
+          {/* Charts Grid - Always render with progressive loading */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <ErrorBoundary>
+              <Suspense fallback={loadingFallback}>
+                <SourceDistributionChart 
+                  data={error ? [] : sourceData} 
+                  loading={isInitialLoad} 
+                />
+              </Suspense>
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <Suspense fallback={loadingFallback}>
+                <CallerTypeDistributionChart 
+                  data={error ? [] : callerTypeData} 
+                  loading={isInitialLoad} 
+                />
+              </Suspense>
+            </ErrorBoundary>
+          </div>
 
-          {/* Recent Incoming Calls Table */}
-          {!error && (
-            <RecentIncomingCallsTable calls={calls} loading={loading} />
-          )}
+          {/* Recent Incoming Calls Table - Always render */}
+          <ErrorBoundary>
+            <Suspense fallback={tableLoadingFallback}>
+              <RecentIncomingCallsTable 
+                calls={error ? [] : calls} 
+                loading={isInitialLoad} 
+              />
+            </Suspense>
+          </ErrorBoundary>
 
-          {/* Sankey Diagram - Full Width */}
-          {!error && (
-            <SourceToCallerTypeSankey data={sankeyData} loading={loading} />
-          )}
+          {/* Sankey Diagram - Always render */}
+          <ErrorBoundary>
+            <Suspense fallback={loadingFallback}>
+              <SourceToCallerTypeSankey 
+                data={error ? { nodes: [], links: [] } : sankeyData} 
+                loading={isInitialLoad} 
+              />
+            </Suspense>
+          </ErrorBoundary>
 
         </div>
       </div>

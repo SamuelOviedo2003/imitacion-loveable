@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { Phone, ChevronUp, ChevronDown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -9,11 +9,14 @@ interface AppointmentSettersProps {
   appointmentSetters: any[]
 }
 
-export default function AppointmentSetters({ appointmentSetters }: AppointmentSettersProps) {
+const AppointmentSetters = React.memo(function AppointmentSetters({ appointmentSetters }: AppointmentSettersProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   
-  // Sort appointment setters by booked appointments in descending order
-  const sortedSetters = [...appointmentSetters].sort((a, b) => (b.bookedLeads || 0) - (a.bookedLeads || 0))
+  // Memoize sorted setters to prevent unnecessary re-sorting
+  const sortedSetters = useMemo(() => 
+    [...appointmentSetters].sort((a, b) => (b.bookedLeads || 0) - (a.bookedLeads || 0)),
+    [appointmentSetters]
+  )
   
   const itemsPerPage = 1
   const showNavigation = sortedSetters.length > itemsPerPage
@@ -120,4 +123,6 @@ export default function AppointmentSetters({ appointmentSetters }: AppointmentSe
       </CardContent>
     </Card>
   )
-}
+})
+
+export default AppointmentSetters
