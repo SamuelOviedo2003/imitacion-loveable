@@ -12,6 +12,7 @@
 - [Salesman](#salesman)
 - [FB Analysis](#fb-analysis)
 - [Settings](#settings)
+- [Loading System](#loading-system)
 - [Database Schema](#database-schema)
 - [Error Handling & Edge Cases](#error-handling--edge-cases)
 
@@ -449,6 +450,99 @@ ORDER BY created_at DESC;
 
 ---
 
+## Loading System
+
+### Functional Requirements
+- **Animated Loading Screens**: Custom house roof repair themed animations
+- **Multiple Component Types**: Full-screen overlay, page-level, and inline loaders
+- **Performance Optimized**: Lightweight SVG animations with minimal performance impact
+- **Business Branding**: Visual theme reflects roofing/construction business focus
+- **Progressive Loading**: Staggered animation sequence with smooth transitions
+
+### UI/UX Behavior
+- **7-Phase Animation Sequence**: Construction worker, sliding shingles, completion effects
+- **Modern Color Palette**: Purple/violet gradients (#6366f1 to #8b5cf6) with coral accents (#f87171)
+- **Smooth Transitions**: Cubic-bezier easing for realistic construction motion
+- **Responsive Sizing**: Three size variants (sm, md, lg) for different contexts
+- **Atmospheric Effects**: Background particles, shimmer effects, and glow animations
+
+### Component Architecture
+
+#### LoadingScreen Component
+- **Sizes**: `sm`, `md`, `lg` with proportional scaling
+- **Customization**: Optional messages, visibility controls
+- **Animation Phases**:
+  1. Construction worker appears (500ms, bouncing animation)
+  2. Top center shingle slides in with glow effect (1000ms)
+  3. Second row shingles slide from left/right simultaneously (1400ms)
+  4. Third row shingles with staggered timing (1800ms)
+  5. Bottom row shingles complete the roof (2200ms)
+  6. Success glow + sparkle effects around completed house (2600ms)
+  7. Final shimmer effect sweeps across structure (3000ms, then resets at 3500ms)
+
+#### LoadingOverlay Component
+- **Full-Screen Coverage**: Fixed positioning with z-index management
+- **Enhanced Background**: Gradient overlays, animated background shapes
+- **Floating Elements**: Construction-themed particles, geometric accents
+- **Blur Effects**: Optional backdrop blur for layering over existing content
+- **Contextual Messaging**: Different messages for login, navigation, etc.
+
+#### InlineLoader Component
+- **Compact Design**: Simplified house icon for buttons and inline use
+- **Three Sizes**: `xs`, `sm`, `md` for different inline contexts
+- **Subtle Animation**: Pulse effects with sparkle accents
+- **Integration Ready**: Easy to embed in buttons, forms, and components
+
+### Implementation Coverage
+
+#### Post-Authentication Flow
+- **ProtectedLayout**: "Setting up your workspace..." during auth loading
+- **Post-Login**: "Welcome back! Preparing your dashboard..." for smooth transition
+- **Business Switching**: Loading state when switching between businesses
+
+#### Page-Level Loading
+- **New Leads**: "Loading lead metrics..." with full LoadingScreen
+- **Salesman**: "Loading revenue metrics..." with full LoadingScreen  
+- **Incoming Calls**: Custom loading fallbacks for chart components
+- **Settings**: "Loading profile settings..." for form initialization
+
+#### Component-Level Loading
+- **Forms**: InlineLoader in save buttons during submission
+- **Tables**: LoadingScreen fallbacks for data fetching
+- **Charts**: Individual loading states for lazy-loaded components
+- **Images**: Progressive loading with placeholder states
+
+### Performance Specifications
+- **Pure CSS Animations**: Hardware-accelerated transforms and opacity changes
+- **SVG Graphics**: Vector-based for crisp scaling at all resolutions  
+- **Minimal JavaScript**: State management limited to animation phase tracking
+- **No Navigation Impact**: Loading animations don't block or slow page transitions
+- **Memory Efficient**: Automatic cleanup with timeout management
+
+### Visual Design Elements
+- **Construction Theme**: House with damaged roof being progressively repaired
+- **Worker Animation**: Bouncing construction worker with hard hat and tool
+- **Sliding Shingles**: Realistic slide-in motion from left and right sides
+- **Glow Effects**: Success highlighting with gradient borders
+- **Shimmer Sweep**: Final light effect passing over completed structure
+- **Background Trees**: Animated coral trees matching reference design
+- **Floating Particles**: Construction dust and sparkle effects
+
+### Error Handling
+- **Component Failures**: Graceful fallbacks with retry functionality
+- **Loading Timeouts**: Automatic recovery from stuck loading states
+- **Error Boundaries**: Isolated error handling preventing cascade failures
+- **Network Issues**: Timeout protection (15-30 seconds) with fallback content
+
+### Accessibility & Standards
+- **Screen Readers**: Proper ARIA labels for loading states
+- **Reduced Motion**: Respects user motion preferences
+- **Keyboard Navigation**: No interference with navigation during loading
+- **Color Contrast**: Sufficient contrast ratios for all text and indicators
+- **Focus Management**: Proper focus handling during loading transitions
+
+---
+
 ## Database Schema
 
 ### Key Tables & Relationships
@@ -574,6 +668,7 @@ WHERE p.id = ?;
 - **Audio**: HTML5 Audio API with custom controls
 - **Icons**: Lucide React
 - **Styling**: Tailwind CSS with custom components
+- **Loading System**: Custom animated loading screens with house roof repair theme
 
 ### Code Organization
 - **Pages**: App Router structure in `/src/app/`
