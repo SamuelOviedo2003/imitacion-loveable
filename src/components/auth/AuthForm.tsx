@@ -132,30 +132,41 @@ export function AuthForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4" style={{ backgroundColor: "#E8F4F8" }}>
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
-        <div className="relative bg-gradient-to-br from-green-800 to-green-900 p-8 flex flex-col justify-center min-h-[600px]">
-          <div className="relative flex-1 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Left side - Branding */}
+        <div className="hidden lg:flex flex-col items-center justify-center text-center space-y-8">
+          <div className="relative">
             <Image
               src="/images/house.png"
               alt="Beautiful modern house"
-              width={400}
-              height={300}
-              className="rounded-lg shadow-lg object-cover"
+              width={500}
+              height={400}
+              className="rounded-3xl shadow-2xl object-cover"
               priority
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-3xl" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-4xl font-bold text-gray-900">
+              Welcome to Lead Management
+            </h2>
+            <p className="text-xl text-gray-600 max-w-md">
+              Streamline your real estate business with powerful lead tracking and management tools.
+            </p>
           </div>
         </div>
 
-        <div className="p-8 lg:p-12 flex flex-col justify-center">
-          <div className="w-full max-w-sm mx-auto">
+        {/* Right side - Auth Form */}
+        <div className="flex items-center justify-center">
+          <div className="modern-card w-full max-w-md">
             {/* Back to Sign In button - only show on Create Account screen */}
             {isSignUp && (
               <div className="mb-6">
                 <button
                   type="button"
                   onClick={() => setIsSignUp(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="modern-button-secondary flex items-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span className="text-sm font-medium">Back to Sign In</span>
@@ -163,42 +174,44 @@ export function AuthForm() {
               </div>
             )}
 
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                {isSignUp ? 'Create account' : 'Welcome back'}
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
               </h1>
-              <p className="text-slate-600">
-                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+              <p className="text-gray-600">
+                {isSignUp ? 'Join us today to get started' : 'Sign in to continue to your dashboard'}
+              </p>
+              <div className="mt-4">
                 <button 
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-green-800 hover:text-green-900 font-medium"
+                  className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
                 >
-                  {isSignUp ? 'Sign in' : 'Sign up'}
+                  {isSignUp ? 'Already have an account? Sign in' : 'New here? Create an account'}
                 </button>
-              </p>
+              </div>
             </div>
 
             {!isSupabaseConfigured && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <h3 className="text-sm font-medium text-amber-800 mb-2">⚠️ Supabase Not Configured</h3>
+              <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                <h3 className="text-sm font-semibold text-amber-800 mb-2">⚠️ Setup Required</h3>
                 <p className="text-sm text-amber-700">
-                  To enable authentication, add your Supabase credentials to <code className="bg-amber-100 px-1 rounded">.env.local</code>
+                  Please configure your Supabase credentials in <code className="bg-amber-100 px-2 py-1 rounded text-xs">.env.local</code>
                 </p>
               </div>
             )}
 
-            <form onSubmit={handleAuth} className="space-y-6">
+            <form onSubmit={handleAuth} className="space-y-5">
               {isSignUp && (
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-slate-700">
+                  <Label htmlFor="name" className="text-gray-700 font-medium">
                     Full Name
                   </Label>
                   <Input
                     id="name"
                     type="text"
                     placeholder="Enter your full name"
-                    className="h-12 border-slate-300 focus:border-green-800 focus:ring-green-800"
+                    className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/50"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -207,14 +220,14 @@ export function AuthForm() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700">
-                  Email
+                <Label htmlFor="email" className="text-gray-700 font-medium">
+                  Email Address
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  className="h-12 border-slate-300 focus:border-green-800 focus:ring-green-800"
+                  className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/50"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -222,14 +235,14 @@ export function AuthForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700">
+                <Label htmlFor="password" className="text-gray-700 font-medium">
                   Password
                 </Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder={isSignUp ? "Create a password" : "Enter your password"}
-                  className="h-12 border-slate-300 focus:border-green-800 focus:ring-green-800"
+                  className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/50"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -239,35 +252,39 @@ export function AuthForm() {
 
               {!isSignUp && (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <Checkbox id="remember" />
-                    <Label htmlFor="remember" className="text-sm text-slate-600">
+                    <Label htmlFor="remember" className="text-sm text-gray-600">
                       Remember me
                     </Label>
                   </div>
-                  <Link href="/forgot-password" className="text-sm text-green-800 hover:text-green-900">
+                  <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
                     Forgot password?
                   </Link>
                 </div>
               )}
 
               {isSignUp && (
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="terms" />
-                  <Label htmlFor="terms" className="text-sm text-slate-600">
+                <div className="flex items-start space-x-3">
+                  <Checkbox id="terms" className="mt-0.5" />
+                  <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
                     I agree to the{" "}
-                    <Link href="/terms" className="text-green-800 hover:text-green-900">
+                    <Link href="/terms" className="text-indigo-600 hover:text-indigo-700 font-medium">
                       Terms & Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                      Privacy Policy
                     </Link>
                   </Label>
                 </div>
               )}
 
               {message && (
-                <div className={`p-3 rounded-md text-sm ${
-                    message.includes('Check your email')
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                <div className={`p-4 rounded-xl text-sm font-medium ${
+                    message.includes('Check your email') || message.includes('successful')
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border border-green-200'
+                      : 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border border-red-200'
                 }`}>
                   {message}
                 </div>
@@ -276,9 +293,9 @@ export function AuthForm() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full h-12 bg-green-800 hover:bg-green-900 text-white font-medium"
+                className="modern-button modern-button-primary w-full h-12 text-base font-semibold"
               >
-                {loading ? 'Loading...' : isSignUp ? 'Create account' : 'Sign in'}
+                {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
               </Button>
             </form>
           </div>

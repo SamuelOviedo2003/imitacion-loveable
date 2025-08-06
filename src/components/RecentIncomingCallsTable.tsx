@@ -1,7 +1,6 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { IncomingCall } from '@/hooks/useIncomingCallsData'
 import { useAuth } from "@/contexts/AuthContext"
 import { formatDateTimeInTimezone } from "@/lib/leadUtils"
@@ -45,31 +44,17 @@ export default function RecentIncomingCallsTable({ calls, loading }: RecentIncom
   const { businessData } = useAuth()
   if (loading) {
     return (
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="border-b border-gray-100">
-          <CardTitle className="text-gray-900 flex items-center gap-2">Recent Incoming Calls</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-pulse text-gray-500">Loading calls...</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-32">
+        <div className="animate-pulse text-gray-500">Loading calls...</div>
+      </div>
     )
   }
 
   if (!calls || calls.length === 0) {
     return (
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader className="border-b border-gray-100">
-          <CardTitle className="text-gray-900 flex items-center gap-2">Recent Incoming Calls</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">No calls found for the selected time period</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-32">
+        <div className="text-gray-500">No calls found for the selected time period</div>
+      </div>
     )
   }
 
@@ -77,60 +62,55 @@ export default function RecentIncomingCallsTable({ calls, loading }: RecentIncom
   const displayCalls = calls.slice(0, 20)
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader className="border-b border-gray-100">
-        <CardTitle className="text-gray-900 flex items-center gap-2">Recent Incoming Calls</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Date & Time</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Source</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Caller Type</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Duration</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayCalls.map((call, index) => {
-                const dateTime = formatDateTimeInTimezone(call.created_at, businessData?.time_zone)
-                const source = call.source?.trim() || 'Unknown'
-                const callerType = call.caller_type?.trim() || 'Unknown'
-                const duration = formatDuration(call.duration)
-                const status = call.status?.trim() || 'Unknown'
-                const statusStyle = getStatusBadgeStyle(call.status)
-                
-                return (
-                  <tr 
-                    key={call.incoming_call_id || index} 
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-gray-900">{dateTime}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <Badge className="bg-purple-50 text-purple-600 border border-purple-200 text-xs">
-                        {source}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-6">
-                      <Badge className="bg-indigo-50 text-indigo-600 border border-indigo-200 text-xs">
-                        {callerType}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-6 text-gray-600 font-medium">{duration}</td>
-                    <td className="py-4 px-6">
-                      <Badge className={`${statusStyle} text-xs`}>{status}</Badge>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-100/50 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gradient-to-r from-gray-50/80 to-blue-50/80">
+            <tr>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold">Date & Time</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold">Source</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold">Caller Type</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold">Duration</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100/50">
+            {displayCalls.map((call, index) => {
+              const dateTime = formatDateTimeInTimezone(call.created_at, businessData?.time_zone)
+              const source = call.source?.trim() || 'Unknown'
+              const callerType = call.caller_type?.trim() || 'Unknown'
+              const duration = formatDuration(call.duration)
+              const status = call.status?.trim() || 'Unknown'
+              const statusStyle = getStatusBadgeStyle(call.status)
+              
+              return (
+                <tr 
+                  key={call.incoming_call_id || index} 
+                  className="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200"
+                >
+                  <td className="py-4 px-6">
+                    <div className="font-medium text-gray-900">{dateTime}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <Badge className="bg-purple-50 text-purple-600 border border-purple-200 text-xs rounded-xl shadow-sm">
+                      {source}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-6">
+                    <Badge className="bg-indigo-50 text-indigo-600 border border-indigo-200 text-xs rounded-xl shadow-sm">
+                      {callerType}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-6 text-gray-600 font-medium">{duration}</td>
+                  <td className="py-4 px-6">
+                    <Badge className={`${statusStyle} text-xs rounded-xl shadow-sm`}>{status}</Badge>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }

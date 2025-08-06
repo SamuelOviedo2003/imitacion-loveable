@@ -34,33 +34,39 @@ export default function SalesmanPage() {
 
   return (
     <ProtectedLayout>
-      <div className="container mx-auto px-6 py-8">
-        <div className="space-y-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Salesman</h1>
-              <p className="text-gray-600">Revenue metrics and sales performance</p>
-            </div>
-            
-            {/* Date Filter */}
-            <div className="flex flex-col items-end">
-              <p className="text-sm text-gray-500 mb-2">Date Filter</p>
-              <div className="relative">
-                <select 
-                  value={timePeriod} 
-                  onChange={(e) => setTimePeriod(Number(e.target.value))}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-40"
-                >
-                  <option value={30}>Last 30 days</option>
-                  <option value={60}>Last 60 days</option>
-                  <option value={90}>Last 90 days</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30">
+        <div className="container mx-auto px-6 py-10">
+          <div className="space-y-10">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
+              <div className="text-center md:text-left">
+                <h1 className="text-4xl font-bold text-gray-900 mb-3">Sales Performance</h1>
+                <p className="text-lg text-gray-600">Revenue metrics and sales analytics dashboard</p>
+              </div>
+              
+              {/* Modern Date Filter */}
+              <div className="flex flex-col items-center md:items-end">
+                <p className="text-sm font-medium text-gray-700 mb-3">Time Period</p>
+                <div className="relative">
+                  <select 
+                    value={timePeriod} 
+                    onChange={(e) => setTimePeriod(Number(e.target.value))}
+                    className="appearance-none modern-card bg-white border-0 shadow-md px-4 py-3 pr-10 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:shadow-lg w-48 transition-all duration-200"
+                  >
+                    <option value={30}>Last 30 days</option>
+                    <option value={60}>Last 60 days</option>
+                    <option value={90}>Last 90 days</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <RevenueMetrics revenueMetrics={revenueMetrics} />
+            {/* Revenue Metrics */}
+            <div className="max-w-md mx-auto">
+              <RevenueMetrics revenueMetrics={revenueMetrics} />
+            </div>
+          </div>
         </div>
       </div>
     </ProtectedLayout>

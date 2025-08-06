@@ -89,51 +89,49 @@ export default function Header() {
   const hasNoBusiness = !businessData
 
   return (
-    <div className="container mx-auto px-6 pt-6 relative z-50">
-      <Card className="bg-white/90 backdrop-blur-md border border-gray-200/50 shadow-lg relative">
-        <header className="flex items-center justify-between px-8 py-6">
-          <div className="flex items-center gap-2">
+    <div className="container mx-auto px-6 pt-8 relative z-50">
+      <div className="modern-card bg-white/95 backdrop-blur-xl border-0 shadow-xl">
+        <header className="flex items-center justify-between px-10 py-5">
+          <div className="flex items-center gap-4">
             {hasNoBusiness ? (
-              <div className="flex items-center gap-3">
-                <div className="relative h-12 min-w-[48px]">
-                  <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-gray-400" />
+              <div className="flex items-center gap-4">
+                <div className="relative h-16 min-w-[64px]">
+                  <div className="h-16 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-sm">
+                    <Building2 className="h-8 w-8 text-gray-500" />
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
-                  <p className="font-medium">No Business Associated</p>
-                  <p className="text-xs">Contact admin to assign business</p>
+                <div className="text-sm">
+                  <p className="font-semibold text-gray-700">No Business Associated</p>
+                  <p className="text-xs text-gray-500 mt-1">Contact admin to assign business</p>
                 </div>
               </div>
             ) : (
               <Link href="/home">
-                <div className="relative h-12 min-w-[48px]">
+                <div className="relative h-16 min-w-[64px] group">
                   {businessData.avatar_url ? (
-                    <img
-                      key={`logo-${businessData.business_id}`}
-                      src={businessData.avatar_url}
-                      alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
-                      className="h-12 w-auto bg-white rounded px-1 cursor-pointer"
-                      style={{
-                        filter: "drop-shadow(0 0 0 white)",
-                        mixBlendMode: "multiply",
-                      }}
-                      onError={(e) => {
-                        // Replace with fallback icon on error
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.parentElement!.innerHTML = `
-                          <div class="h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
-                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
-                          </div>
-                        `;
-                      }}
-                    />
+                    <div className="h-16 w-16 bg-white rounded-xl shadow-md p-2 group-hover:shadow-lg transition-shadow duration-200">
+                      <img
+                        key={`logo-${businessData.business_id}`}
+                        src={businessData.avatar_url}
+                        alt={businessData.company_name ? `${businessData.company_name} Logo` : "Company Logo"}
+                        className="h-full w-full object-contain cursor-pointer"
+                        onError={(e) => {
+                          // Replace with fallback icon on error
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.parentElement!.innerHTML = `
+                            <div class="h-full w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center cursor-pointer">
+                              <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                              </svg>
+                            </div>
+                          `;
+                        }}
+                      />
+                    </div>
                   ) : (
-                    <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center cursor-pointer">
-                      <Building2 className="h-6 w-6 text-gray-400" />
+                    <div className="h-16 w-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center cursor-pointer shadow-md group-hover:shadow-lg transition-shadow duration-200">
+                      <Building2 className="h-8 w-8 text-gray-500" />
                     </div>
                   )}
                 </div>
@@ -210,53 +208,63 @@ export default function Header() {
             )}
           </div>
 
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-2">
             {hasNoBusiness ? (
               <>
-                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">Dashboard</span>
-                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">New Leads</span>
-                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">Salesman</span>
-                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">Incoming Calls</span>
-                <span className="text-sm font-medium text-gray-400 cursor-not-allowed">FB Analysis</span>
+                <div className="px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">Dashboard</div>
+                <div className="px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">New Leads</div>
+                <div className="px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">Salesman</div>
+                <div className="px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">Incoming Calls</div>
+                <div className="px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">FB Analysis</div>
               </>
             ) : (
               <>
                 <Link 
                   href="/dashboard" 
-                  className={`transition-colors text-sm font-medium ${
-                    isActive('/dashboard') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isActive('/dashboard') 
+                      ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/new-leads"
-                  className={`transition-colors text-sm font-medium ${
-                    isActive('/new-leads') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isActive('/new-leads') 
+                      ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   New Leads
                 </Link>
                 <Link 
                   href="/salesman" 
-                  className={`transition-colors text-sm font-medium ${
-                    isActive('/salesman') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isActive('/salesman') 
+                      ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Salesman
                 </Link>
                 <Link 
                   href="/incoming-calls" 
-                  className={`transition-colors text-sm font-medium ${
-                    isActive('/incoming-calls') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isActive('/incoming-calls') 
+                      ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   Incoming Calls
                 </Link>
                 <Link 
                   href="/fb-analysis" 
-                  className={`transition-colors text-sm font-medium ${
-                    isActive('/fb-analysis') ? 'text-gray-900 font-medium' : 'text-gray-700 hover:text-gray-900'
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isActive('/fb-analysis') 
+                      ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   FB Analysis
@@ -270,39 +278,40 @@ export default function Header() {
               <div className="relative z-[99999]" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                  className="flex items-center space-x-3 hover:bg-gray-50 rounded-xl p-3 transition-all duration-200 hover:shadow-md group"
                 >
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
-                    <div className="w-full h-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-blue-600 text-sm font-bold">
+                  <div className="w-11 h-11 rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm group-hover:border-indigo-300 transition-colors">
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                      <span className="text-indigo-700 text-sm font-bold">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 group-hover:text-indigo-600 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[100000] shadow-2xl">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                  <div className="absolute right-0 mt-3 w-56 modern-card bg-white border-0 shadow-2xl py-3 z-[100000]">
+                    <div className="px-5 py-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
                         {user?.email}
                       </p>
+                      <p className="text-xs text-gray-500 mt-1">Manage your account</p>
                     </div>
                     <Link
                       href="/settings"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                      className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 flex items-center gap-3"
                     >
-                      <Settings className="w-4 h-4" />
-                      Settings
+                      <Settings className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">Settings</span>
                     </Link>
                     <button
                       onClick={handleSignOut}
                       disabled={isSigningOut}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                      <span className="font-medium">{isSigningOut ? 'Signing Out...' : 'Sign Out'}</span>
                     </button>
                   </div>
                 )}
@@ -310,13 +319,15 @@ export default function Header() {
             )}
             
             {!user && !loading && (
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
-                <img src="/placeholder.svg?height=40&width=40" alt="Profile" className="w-full h-full object-cover" />
+              <div className="w-11 h-11 rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm">
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500 text-sm font-bold">?</span>
+                </div>
               </div>
             )}
           </div>
         </header>
-      </Card>
+      </div>
     </div>
   )
 }

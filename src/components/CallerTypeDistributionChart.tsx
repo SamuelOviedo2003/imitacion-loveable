@@ -1,7 +1,6 @@
 "use client"
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartData } from '@/hooks/useIncomingCallsData'
 
 interface CallerTypeDistributionChartProps {
@@ -49,70 +48,49 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, val
 export default function CallerTypeDistributionChart({ data, loading }: CallerTypeDistributionChartProps) {
   if (loading) {
     return (
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">Caller Type Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-80">
-            <div className="animate-pulse text-gray-500">Loading chart...</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-80">
+        <div className="animate-pulse text-gray-500">Loading chart...</div>
+      </div>
     )
   }
 
   if (!data || data.length === 0) {
     return (
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">Caller Type Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-80">
-            <div className="text-gray-500">No data available</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-80">
+        <div className="text-gray-500">No data available</div>
+      </div>
     )
   }
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-gray-900">Caller Type Distribution</CardTitle>
-      </CardHeader>
-      <CardContent className="pb-4">
-        <div className="w-full h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                outerRadius={120}
-                innerRadius={60}
-                fill="#8884d8"
-                dataKey="value"
-                label={renderCustomizedLabel}
-                labelLine={false}
-                animationBegin={0}
-                animationDuration={800}
-              >
-                {data.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={entry.color}
-                    stroke="white"
-                    strokeWidth={2}
-                  />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="w-full h-80">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            outerRadius={120}
+            innerRadius={60}
+            fill="#8884d8"
+            dataKey="value"
+            label={renderCustomizedLabel}
+            labelLine={false}
+            animationBegin={0}
+            animationDuration={800}
+          >
+            {data.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.color}
+                stroke="white"
+                strokeWidth={2}
+              />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   )
 }

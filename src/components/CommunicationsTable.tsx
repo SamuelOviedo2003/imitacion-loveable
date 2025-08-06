@@ -150,101 +150,107 @@ export default function CommunicationsTable({ communications, loading }: Communi
   }
 
   return (
-    <table className="w-full">
-        <thead className="bg-gray-50 sticky top-0">
-          <tr>
-            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-48">Type</th>
-            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm">Summary</th>
-            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-32">Created</th>
-            <th className="text-left py-4 px-6 font-medium text-gray-600 text-sm w-32">Audio</th>
-          </tr>
-        </thead>
-      <tbody>
-        {sortedCommunications.map((communication) => {
-          const isCurrentlyPlaying = audioState.playing && audioState.currentId === communication.communication_id
-          const hasRecording = !!communication.recording_url
-          
-          return (
-            <tr key={communication.communication_id} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-4 px-6 w-48">
-                <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getMessageTypeColor(communication.message_type)}`}>
-                  {formatMessageType(communication.message_type)}
-                </span>
-              </td>
-              <td className="py-4 px-6 text-gray-900">
-                <div className="text-sm leading-relaxed" title={communication.summary || ''}>
-                  {communication.summary || 'No summary available'}
-                </div>
-              </td>
-              <td className="py-4 px-6 text-gray-600 text-sm w-32">
-                {formatCommunicationDateTime(communication.created_at, businessData?.time_zone)}
-              </td>
-              <td className="py-4 px-6 w-32">
-                {hasRecording ? (
-                  <div className="flex flex-col items-center space-y-2">
-                    <button
-                      onClick={() => handlePlayPause(communication)}
-                      className="p-1.5 rounded-full transition-colors text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                      title={isCurrentlyPlaying ? 'Pause recording' : 'Play recording'}
-                    >
-                      {isCurrentlyPlaying ? (
-                        <Pause className="w-4 h-4" />
-                      ) : (
-                        <Play className="w-4 h-4" />
-                      )}
-                    </button>
-                    
-                    {/* Progress Bar */}
-                    <div className="w-full max-w-[100px]">
-                      <div className="relative">
-                        <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          {/* Progress fill */}
-                          {audioState.currentId === communication.communication_id && audioState.duration > 0 && (
-                            <div 
-                              className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-100"
-                              style={{ 
-                                width: `${(audioState.currentTime / audioState.duration) * 100}%` 
-                              }}
-                            />
+    <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-100/50 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gradient-to-r from-gray-50/80 to-blue-50/80">
+            <tr>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold text-sm">Type</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold text-sm">Summary</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold text-sm">Created</th>
+              <th className="text-left py-4 px-6 text-gray-700 font-semibold text-sm">Audio</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100/50">
+            {sortedCommunications.map((communication) => {
+              const isCurrentlyPlaying = audioState.playing && audioState.currentId === communication.communication_id
+              const hasRecording = !!communication.recording_url
+              
+              return (
+                <tr key={communication.communication_id} className="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
+                  <td className="py-4 px-6">
+                    <span className={`px-3 py-1.5 rounded-xl text-xs font-medium ${getMessageTypeColor(communication.message_type)} shadow-sm`}>
+                      {formatMessageType(communication.message_type)}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-sm leading-relaxed text-gray-900" title={communication.summary || ''}>
+                      {communication.summary || 'No summary available'}
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="text-gray-600 text-sm">
+                      {formatCommunicationDateTime(communication.created_at, businessData?.time_zone)}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    {hasRecording ? (
+                      <div className="flex flex-col items-center space-y-2">
+                        <button
+                          onClick={() => handlePlayPause(communication)}
+                          className="p-2 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-200 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          title={isCurrentlyPlaying ? 'Pause recording' : 'Play recording'}
+                        >
+                          {isCurrentlyPlaying ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
                           )}
+                        </button>
+                        
+                        {/* Progress Bar */}
+                        <div className="w-full max-w-[100px]">
+                          <div className="relative">
+                            <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                              {/* Progress fill */}
+                              {audioState.currentId === communication.communication_id && audioState.duration > 0 && (
+                                <div 
+                                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-100"
+                                  style={{ 
+                                    width: `${(audioState.currentTime / audioState.duration) * 100}%` 
+                                  }}
+                                />
+                              )}
+                              
+                              {/* Clickable overlay */}
+                              <input
+                                type="range"
+                                min="0"
+                                max={audioState.currentId === communication.communication_id ? audioState.duration || 0 : 0}
+                                step="0.1"
+                                value={audioState.currentId === communication.communication_id ? audioState.currentTime : 0}
+                                onChange={(e) => handleSeek(communication, parseFloat(e.target.value))}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                disabled={audioState.currentId !== communication.communication_id}
+                              />
+                            </div>
+                          </div>
                           
-                          {/* Clickable overlay */}
-                          <input
-                            type="range"
-                            min="0"
-                            max={audioState.currentId === communication.communication_id ? audioState.duration || 0 : 0}
-                            step="0.1"
-                            value={audioState.currentId === communication.communication_id ? audioState.currentTime : 0}
-                            onChange={(e) => handleSeek(communication, parseFloat(e.target.value))}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                            disabled={audioState.currentId !== communication.communication_id}
-                          />
+                          {/* Time Display */}
+                          {audioState.currentId === communication.communication_id && (
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>{formatTime(audioState.currentTime)}</span>
+                              <span>{formatTime(audioState.duration)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      
-                      {/* Time Display */}
-                      {audioState.currentId === communication.communication_id && (
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                          <span>{formatTime(audioState.currentTime)}</span>
-                          <span>{formatTime(audioState.duration)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    disabled
-                    className="p-2 rounded-full text-gray-300 cursor-not-allowed"
-                    title="No recording available"
-                  >
-                    <Play className="w-4 h-4" />
-                  </button>
-                )}
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+                    ) : (
+                      <button
+                        disabled
+                        className="p-2 rounded-xl bg-gray-100 text-gray-300 cursor-not-allowed shadow-sm"
+                        title="No recording available"
+                      >
+                        <Play className="w-4 h-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }

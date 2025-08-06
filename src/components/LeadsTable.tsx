@@ -103,24 +103,28 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader className="border-b border-gray-100">
-        <CardTitle className="text-gray-900 flex items-center gap-2">Recent Leads</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
+    <div>
+      {/* Table Header */}
+      <div className="mb-6">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Recent Leads</h3>
+        <p className="text-gray-600">Click on any lead to view detailed information</p>
+      </div>
+
+      {/* Modern Table */}
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-100/50 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Lead Name</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">How Soon</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Service</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Date</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Notes</th>
-                <th className="text-left py-4 px-6 text-gray-600 font-medium">Status</th>
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-gray-50/80 to-blue-50/80">
+              <tr>
+                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Lead Name</th>
+                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">How Soon</th>
+                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Service</th>
+                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Date</th>
+                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Notes</th>
+                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100/50">
               {displayLeads.map((lead, index) => {
                 const name = formatName(lead)
                 const { urgency, urgencyColor } = formatUrgency(lead)
@@ -132,42 +136,63 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                   <tr 
                     key={lead.id || index} 
                     onClick={() => handleRowClick(lead)}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200 cursor-pointer group"
                   >
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${scoreColor}`}>
-                          <span className="text-xs font-bold">
+                    <td className="py-5 px-6">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${scoreColor} shadow-sm group-hover:shadow-md transition-shadow`}>
+                          <span className="text-sm font-bold">
                             {lead.score || 'N/A'}
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{name}</p>
+                          <p className="font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors">{name}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <Badge className={`${urgencyColor} text-xs`}>{urgency}</Badge>
-                    </td>
-                    <td className="py-4 px-6 text-gray-600">{service}</td>
-                    <td className="py-4 px-6 text-gray-600">{dateTime}</td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-600 text-sm max-w-xs truncate" title={lead.notes || 'No notes'}>
-                        {lead.notes || 'No notes'}
+                    <td className="py-5 px-6">
+                      <div className={`inline-flex items-center px-3 py-2 rounded-xl text-xs font-medium ${urgencyColor} shadow-sm`}>
+                        {urgency}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
-                      <Badge className="bg-gray-50 text-gray-600 border border-gray-200 text-xs">
-                        {lead.status || 'N/A'}
-                      </Badge>
+                    <td className="py-5 px-6">
+                      <span className="text-gray-700 font-medium">{service}</span>
+                    </td>
+                    <td className="py-5 px-6">
+                      <span className="text-gray-600 text-sm">{dateTime}</span>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="max-w-xs">
+                        <p className="text-gray-600 text-sm truncate" title={lead.notes || 'No notes available'}>
+                          {lead.notes || 'No notes available'}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="inline-flex items-center px-3 py-2 rounded-xl text-xs font-medium bg-gray-100 text-gray-700 shadow-sm">
+                        {lead.status || 'New'}
+                      </div>
                     </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
+          
+          {/* Empty State */}
+          {displayLeads.length === 0 && (
+            <div className="text-center py-12">
+              <div className="p-4 bg-gray-100 rounded-xl inline-block mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No leads found</h3>
+              <p className="text-gray-600">Leads will appear here once they're created or received.</p>
+            </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

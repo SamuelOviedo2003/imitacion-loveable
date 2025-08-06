@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -23,7 +23,25 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --radius: 1rem;
+    
+    /* Modern Pastel Color Palette */
+    --peach: 25 100% 94%;
+    --peach-foreground: 25 85% 25%;
+    --mint: 150 100% 94%;
+    --mint-foreground: 150 85% 25%;
+    --lavender: 250 100% 94%;
+    --lavender-foreground: 250 85% 25%;
+    --sky: 200 100% 94%;
+    --sky-foreground: 200 85% 25%;
+    --rose: 350 100% 94%;
+    --rose-foreground: 350 85% 25%;
+    --cream: 45 100% 96%;
+    --cream-foreground: 45 85% 25%;
+    --sage: 120 20% 90%;
+    --sage-foreground: 120 40% 25%;
+    --periwinkle: 220 100% 94%;
+    --periwinkle-foreground: 220 85% 25%;
   }
 
   .dark {
@@ -55,6 +73,84 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  /* Modern Card Components */
+  .modern-card {
+    @apply bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .pastel-card-peach {
+    @apply bg-gradient-to-br from-orange-50 to-red-50 border-orange-100;
+  }
+  
+  .pastel-card-mint {
+    @apply bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100;
+  }
+  
+  .pastel-card-lavender {
+    @apply bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-100;
+  }
+  
+  .pastel-card-sky {
+    @apply bg-gradient-to-br from-sky-50 to-blue-50 border-sky-100;
+  }
+  
+  .pastel-card-rose {
+    @apply bg-gradient-to-br from-rose-50 to-pink-50 border-rose-100;
+  }
+  
+  .pastel-card-cream {
+    @apply bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-100;
+  }
+  
+  .pastel-card-sage {
+    @apply bg-gradient-to-br from-green-50 to-lime-50 border-green-100;
+  }
+  
+  .pastel-card-periwinkle {
+    @apply bg-gradient-to-br from-blue-50 to-violet-50 border-blue-100;
+  }
+  
+  /* Modern Button Styles */
+  .modern-button {
+    @apply px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-opacity-30;
+  }
+  
+  .modern-button-primary {
+    @apply bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-400;
+  }
+  
+  .modern-button-secondary {
+    @apply bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 focus:ring-gray-200;
+  }
+  
+  /* Modern Badge Styles */
+  .modern-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  /* Layout Utilities */
+  .grid-modern {
+    @apply grid gap-6;
+  }
+  
+  .grid-modern-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+  
+  .grid-modern-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  
+  .grid-modern-4 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
   }
 }

@@ -284,80 +284,101 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const googleMapsUrl = generateGoogleMapsUrl(address)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       <Header />
-      <div className="max-w-7xl mx-auto px-8 py-6">
-        {/* Back Button */}
-        <div className="mb-6">
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Modern Back Button */}
+        <div className="mb-8">
           <button
             onClick={() => router.push('/new-leads')}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="modern-button-secondary flex items-center gap-3"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to New Leads</span>
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Back to New Leads</span>
           </button>
         </div>
         
-        <div className="flex flex-col gap-10">
+        <div className="space-y-10">
+          {/* Header Section */}
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">Lead Details</h1>
+            <p className="text-lg text-gray-600">Complete overview of lead information and communications</p>
+          </div>
+
           {/* Top Row: Lead Info + Property Image */}
-          <div className="grid grid-cols-2 gap-8">
-            {/* Top Left: Lead Information Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6">
-                {/* Personal/Contact Information - Unified Component */}
-                <div className="mb-6">
-                  <div className="mb-4">
-                    <div className="flex justify-between items-start">
-                      {/* Contact Details */}
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-3">{leadName}</h2>
-                        <div className="space-y-1 text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm">{lead.email || lead.customer_email || 'No email provided'}</p>
-                            {lead.email_valid ? (
-                              <Check className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <X className="w-4 h-4 text-red-600" />
-                            )}
-                          </div>
-                          <p className="text-sm">{lead.phone || lead.phone_number || 'No phone provided'}</p>
-                          
-                          {/* Distance and Duration */}
-                          <div className="flex gap-4 mt-2">
-                            <div>
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Distance</p>
-                              <p className="text-sm font-semibold text-gray-900">{formatDistance(lead.distance_meters) || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
-                              <p className="text-sm font-semibold text-gray-900">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
-                            </div>
-                          </div>
-                          
-                          {/* Address without label */}
-                          {address && (
-                            <div className="mt-2">
-                              <p className="text-sm">{address}</p>
-                              <a
-                                href={googleMapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm transition-colors mt-1"
-                              >
-                                <ExternalLink className="w-3 h-3" />
-                                View on Maps
-                              </a>
-                            </div>
-                          )}
+          <div className="grid-modern-2">
+            {/* Lead Information Card */}
+            <div className="modern-card pastel-card-peach space-y-6">
+              {/* Header */}
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{leadName}</h2>
+                <p className="text-gray-600 text-sm">Lead Information & Contact Details</p>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                    Contact Information
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-700">{lead.email || lead.customer_email || 'No email provided'}</span>
+                      {lead.email_valid ? (
+                        <div className="p-1 bg-green-100 rounded-full">
+                          <Check className="w-4 h-4 text-green-600" />
                         </div>
-                      </div>
+                      ) : (
+                        <div className="p-1 bg-red-100 rounded-full">
+                          <X className="w-4 h-4 text-red-600" />
+                        </div>
+                      )}
                     </div>
+                    <p className="text-gray-700">{lead.phone || lead.phone_number || 'No phone provided'}</p>
                   </div>
                 </div>
-                
-                {/* Lead Details - Structured Format */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+
+                {/* Address */}
+                {address && (
+                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                      Property Address
+                    </h4>
+                    <p className="text-gray-700 mb-4">{address}</p>
+                    
+                    {/* Distance and Duration */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="text-center">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Distance</p>
+                        <p className="text-lg font-bold text-orange-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
+                        <p className="text-lg font-bold text-orange-600">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
+                      </div>
+                    </div>
+                    
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="modern-button-secondary inline-flex items-center gap-2 text-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View on Maps
+                    </a>
+                  </div>
+                )}
+
+                {/* Lead Details Grid */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                    Service Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Service Needed</p>
                       <p className="text-sm font-semibold text-gray-900">{service}</p>
@@ -382,68 +403,87 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Source</p>
                       <p className="text-sm font-semibold text-gray-900">{lead.source || 'N/A'}</p>
                     </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Appointment</p>
-                      <p className="text-sm font-semibold text-gray-900">{formatAppointmentDate(lead) || 'Not scheduled'}</p>
-                    </div>
                   </div>
+                </div>
+
+                {/* Appointment */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                    Appointment
+                  </h4>
+                  <p className="text-gray-700">{formatAppointmentDate(lead) || 'Not scheduled'}</p>
                 </div>
               </div>
             </div>
 
-            {/* Top Right: Image and Score Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Lead Image */}
-              <div className="relative h-48 bg-white">
-                {houses.length > 0 && houses[0].photos.length > 0 ? (
-                  <img
-                    src={houses[0].photos[0]}
-                    alt="Property"
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/images/noIMAGE.png';
-                    }}
-                  />
-                ) : (
-                  <img
-                    src="/images/noIMAGE.png"
-                    alt="No Property Image"
-                    className="w-full h-full object-contain"
-                  />
-                )}
+            {/* Property Image and Score Card */}
+            <div className="modern-card pastel-card-sky space-y-6">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Property & Score</h3>
+                <p className="text-gray-600">Visual overview and lead quality assessment</p>
+              </div>
+
+              {/* Property Image */}
+              <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-sky-100/50">
+                <div className="relative h-64 bg-gray-50 rounded-xl overflow-hidden">
+                  {houses.length > 0 && houses[0].photos.length > 0 ? (
+                    <img
+                      src={houses[0].photos[0]}
+                      alt="Property"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/images/noIMAGE.png';
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src="/images/noIMAGE.png"
+                      alt="No Property Image"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
               </div>
               
-              {/* Score and Summary Block */}
-              <div className={`p-4 ${getScoreBackgroundColor(lead.score)}`}>
-                <div className="text-center mb-3">
-                  <div className={`text-3xl font-bold mb-1 ${getScoreTextColor(lead.score)}`}>
+              {/* Score Section */}
+              <div className={`bg-white/70 backdrop-blur-sm rounded-2xl p-8 border ${getScoreBackgroundColor(lead.score).includes('red') ? 'border-red-200/50' : getScoreBackgroundColor(lead.score).includes('yellow') ? 'border-yellow-200/50' : 'border-green-200/50'} text-center`}>
+                <div className="mb-6">
+                  <div className={`text-5xl font-bold mb-2 ${getScoreTextColor(lead.score)}`}>
                     {lead.score ? `${lead.score}%` : 'N/A'}
                   </div>
-                  <div className={`text-xs font-medium uppercase tracking-wide ${getScoreTextColor(lead.score)}`}>
-                    Lead Score
+                  <div className={`text-sm font-medium uppercase tracking-wider ${getScoreTextColor(lead.score)}`}>
+                    Lead Quality Score
                   </div>
                 </div>
-                <div className={`text-xs leading-relaxed text-justify ${getScoreTextColor(lead.score)}`}>
-                  {lead.score_summary || 'No score summary available'}
+                <div className="bg-white/80 rounded-xl p-4">
+                  <p className="text-sm leading-relaxed text-gray-700">
+                    {lead.score_summary || 'No detailed score analysis available for this lead.'}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom: Communications + Chat Unified Component */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Communications Table Section */}
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-900">Communications</h3>
+          {/* Communications Section */}
+          <div className="space-y-6">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Communications History</h3>
+              <p className="text-gray-600">All interactions and messages with this lead</p>
             </div>
+            
             <CommunicationsTable 
               communications={communications} 
               loading={communicationsLoading} 
             />
             
             {/* Message Input Section */}
-            <div className="border-t border-gray-200 px-6 py-4">
+            <div className="modern-card">
+              <div className="mb-4">
+                <h4 className="text-lg font-semibold text-gray-900">Send New Message</h4>
+                <p className="text-sm text-gray-600">Compose and send a message to this lead</p>
+              </div>
               <ChatInterface />
             </div>
           </div>

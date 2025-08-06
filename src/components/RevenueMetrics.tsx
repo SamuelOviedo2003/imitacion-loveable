@@ -1,7 +1,7 @@
 "use client"
 
+import React from "react"
 import { DollarSign } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface RevenueMetricsProps {
   revenueMetrics: {
@@ -11,48 +11,72 @@ interface RevenueMetricsProps {
   }
 }
 
-export default function RevenueMetrics({ revenueMetrics }: RevenueMetricsProps) {
+const RevenueMetrics = React.memo(function RevenueMetrics({ revenueMetrics }: RevenueMetricsProps) {
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-gray-900 flex items-center gap-2">
-          <DollarSign className="w-5 h-5 text-gray-600" />
-          Revenue Metrics
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Revenue Statistics */}
-        <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-white rounded-lg shadow-sm">
+          <DollarSign className="w-5 h-5 text-emerald-600" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">Revenue Metrics</h3>
+          <p className="text-xs text-gray-600">Sales performance overview</p>
+        </div>
+      </div>
+
+      {/* Statistics Cards - Modern Style */}
+      <div className="space-y-3">
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-emerald-100/50">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Shows:</span>
+            <span className="text-gray-700 font-medium text-sm">Shows</span>
             <span className="text-xl font-bold text-gray-900">{revenueMetrics.shows}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Closes:</span>
-            <span className="text-xl font-bold text-green-600">{revenueMetrics.closes}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Total Amount:</span>
-            <span className="text-xl font-bold text-green-600">${revenueMetrics.totalAmount.toLocaleString()}</span>
           </div>
         </div>
         
-        {/* Close Rate and Average Order Display */}
-        <div className="border-t border-gray-200 pt-4 space-y-3">
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-emerald-100/50">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Close Rate:</span>
-            <span className="text-xl font-bold text-green-600">
-              {revenueMetrics.shows > 0 ? Math.round((revenueMetrics.closes / revenueMetrics.shows) * 100) : 0}%
-            </span>
+            <span className="text-gray-700 font-medium text-sm">Closes</span>
+            <span className="text-xl font-bold text-emerald-600">{revenueMetrics.closes}</span>
           </div>
+        </div>
+        
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-emerald-100/50">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Avg. Order:</span>
-            <span className="text-xl font-bold text-green-600">
+            <span className="text-gray-700 font-medium text-sm">Total Amount</span>
+            <span className="text-xl font-bold text-emerald-600">${revenueMetrics.totalAmount.toLocaleString()}</span>
+          </div>
+        </div>
+        
+        {/* Calculated Metrics */}
+        <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/50">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700 font-medium text-sm">Close Rate</span>
+              <span className="text-lg font-bold text-emerald-600">
+                {revenueMetrics.shows > 0 ? Math.round((revenueMetrics.closes / revenueMetrics.shows) * 100) : 0}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div 
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-1.5 rounded-full transition-all duration-500" 
+                style={{ width: `${revenueMetrics.shows > 0 ? Math.min(Math.round((revenueMetrics.closes / revenueMetrics.shows) * 100), 100) : 0}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/50">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium text-sm">Avg. Order Value</span>
+            <span className="text-lg font-bold text-emerald-600">
               ${revenueMetrics.closes > 0 ? Math.round(revenueMetrics.totalAmount / revenueMetrics.closes).toLocaleString() : 0}
             </span>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
-}
+})
+
+export default RevenueMetrics
