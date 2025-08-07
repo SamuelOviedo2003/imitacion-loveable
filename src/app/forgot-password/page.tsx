@@ -39,54 +39,57 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4" style={{ backgroundColor: "#E8F4F8" }}>
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
-        <div className="relative bg-gradient-to-br from-green-800 to-green-900 p-8 flex flex-col justify-center min-h-[600px]">
-          <div className="relative flex-1 flex items-center justify-center">
-            <Image
-              src="/images/house.png"
-              alt="Beautiful modern house"
-              width={400}
-              height={300}
-              className="rounded-lg shadow-lg object-cover"
-              priority
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-200/20 rounded-full filter blur-3xl animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-purple-200/20 rounded-full filter blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/2 w-64 h-64 bg-indigo-200/20 rounded-full filter blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
+      {/* Centered Auth Form */}
+      <div className="min-h-screen flex items-center justify-center p-8 relative z-10">
+        <div className="w-full max-w-sm">
+          {/* Company Logo - Centered Above Form */}
+          <div className="text-center mb-8">
+            <Image 
+              src="/images/DominateLocalLeads.png"
+              alt="Dominate Local Leads"
+              width={200}
+              height={45}
+              className="h-12 w-auto mx-auto"
             />
           </div>
-        </div>
 
-        <div className="p-8 lg:p-12 flex flex-col justify-center">
-          <div className="w-full max-w-sm mx-auto">
-            {/* Back button */}
-            <div className="mb-6">
-              <button
-                type="button"
-                onClick={() => router.push('/')}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium">Back to Sign In</span>
-              </button>
-            </div>
+          <div className="mb-6">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Sign In
+            </button>
+          </div>
 
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                Reset Password
+          {/* Modern Card Container */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 p-8">
+            {/* Context-dependent title */}
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Forgot Password
               </h1>
-              <p className="text-slate-600">
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
             </div>
 
             <form onSubmit={handleResetPassword} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700">
+              <div>
+                <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  className="h-12 border-slate-300 focus:border-green-800 focus:ring-green-800"
+                  className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -94,10 +97,10 @@ export default function ForgotPasswordPage() {
               </div>
 
               {message && (
-                <div className={`p-3 rounded-md text-sm ${
+                <div className={`p-4 rounded-xl text-sm font-medium ${
                   isSuccess
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
+                    ? 'bg-green-50/80 text-green-700 border border-green-200/60'
+                    : 'bg-red-50/80 text-red-700 border border-red-200/60'
                 }`}>
                   {message}
                 </div>
@@ -106,12 +109,11 @@ export default function ForgotPasswordPage() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full h-12 bg-green-800 hover:bg-green-900 text-white font-medium"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>
-
           </div>
         </div>
       </div>

@@ -144,86 +144,70 @@ export function AuthForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Left side - Branding */}
-        <div className="hidden lg:flex flex-col items-center justify-center text-center space-y-8">
-          <div className="space-y-4">
-            <h2 className="text-4xl font-bold text-gray-900">
-              Welcome to Lead Management
-            </h2>
-          </div>
-          <div className="relative">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-200/20 rounded-full filter blur-3xl animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-purple-200/20 rounded-full filter blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/2 w-64 h-64 bg-indigo-200/20 rounded-full filter blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
+      {/* Centered Auth Form */}
+      <div className="min-h-screen flex items-center justify-center p-8 relative z-10">
+        <div className="w-full max-w-sm">
+          {/* Company Logo - Centered Above Form */}
+          <div className="text-center mb-8">
             <Image 
-              src="/images/loginImage.png"
-              alt="Lead Management System"
-              width={500} 
-              height={400} 
-              className="transform hover:scale-105 transition-transform duration-300 rounded-2xl shadow-xl"
+              src="/images/DominateLocalLeads.png"
+              alt="Dominate Local Leads"
+              width={200}
+              height={45}
+              className="h-12 w-auto mx-auto"
             />
           </div>
-          <div className="space-y-4">
-            <p className="text-xl text-gray-600 max-w-md">
-              Streamline your real estate business with powerful lead tracking and management tools.
-            </p>
-          </div>
-        </div>
 
-        {/* Right side - Auth Form */}
-        <div className="flex items-center justify-center">
-          <div className="modern-card w-full max-w-md">
-            {/* Back to Sign In button - only show on Create Account screen */}
-            {isSignUp && (
-              <div className="mb-6">
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(false)}
-                  className="modern-button-secondary flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="text-sm font-medium">Back to Sign In</span>
-                </button>
-              </div>
-            )}
+          {/* Back to Sign In button - only show on Create Account screen */}
+          {isSignUp && (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(false)}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Sign In
+              </button>
+            </div>
+          )}
 
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                {isSignUp ? 'Create Account' : 'Welcome Back'}
+          {/* Modern Card Container */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 p-8">
+            {/* Context-dependent title */}
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {isSignUp ? 'Sign Up' : 'Login'}
               </h1>
-              <p className="text-gray-600">
-                {isSignUp ? 'Join us today to get started' : 'Sign in to continue to your dashboard'}
-              </p>
-              <div className="mt-4">
-                <button 
-                  type="button"
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-                >
-                  {isSignUp ? 'Already have an account? Sign in' : 'New here? Create an account'}
-                </button>
-              </div>
             </div>
 
             {!isSupabaseConfigured && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl">
-                <h3 className="text-sm font-semibold text-red-800 mb-2">⚠️ Service Unavailable</h3>
+              <div className="mb-6 p-4 bg-red-50/80 border border-red-200/60 rounded-xl">
                 <p className="text-sm text-red-700">
                   Authentication service is currently unavailable. Please try again later.
                 </p>
               </div>
             )}
 
-            <form onSubmit={handleAuth} className="space-y-5">
+            <form onSubmit={handleAuth} className="space-y-6">
               {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-700 font-medium">
+                <div>
+                  <Label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                     Full Name
                   </Label>
                   <Input
                     id="name"
                     type="text"
                     placeholder="Enter your full name"
-                    className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/50"
+                    className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -231,30 +215,30 @@ export function AuthForm() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700 font-medium">
-                  Email Address
+              <div>
+                <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
-                  className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/50"
+                  className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700 font-medium">
+              <div>
+                <Label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder={isSignUp ? "Create a password" : "Enter your password"}
-                  className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50/50"
+                  placeholder="Enter your password"
+                  className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -263,30 +247,26 @@ export function AuthForm() {
               </div>
 
               {!isSignUp && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox id="remember" />
-                    <Label htmlFor="remember" className="text-sm text-gray-600">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center">
+                    <Checkbox id="remember" className="rounded" />
+                    <Label htmlFor="remember" className="ml-2 text-gray-600">
                       Remember me
                     </Label>
                   </div>
-                  <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                  <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 font-medium">
                     Forgot password?
                   </Link>
                 </div>
               )}
 
               {isSignUp && (
-                <div className="flex items-start space-x-3">
-                  <Checkbox id="terms" className="mt-0.5" />
-                  <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+                <div className="flex items-start text-sm">
+                  <Checkbox id="terms" className="mt-0.5 rounded" />
+                  <Label htmlFor="terms" className="ml-2 text-gray-600 leading-relaxed">
                     I agree to the{" "}
-                    <Link href="/terms" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                    <Link href="/terms" className="text-blue-600 hover:text-blue-700 font-medium">
                       Terms & Conditions
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                      Privacy Policy
                     </Link>
                   </Label>
                 </div>
@@ -295,8 +275,8 @@ export function AuthForm() {
               {message && (
                 <div className={`p-4 rounded-xl text-sm font-medium ${
                     message.includes('Check your email') || message.includes('successful')
-                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border border-green-200'
-                      : 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border border-red-200'
+                      ? 'bg-green-50/80 text-green-700 border border-green-200/60'
+                      : 'bg-red-50/80 text-red-700 border border-red-200/60'
                 }`}>
                   {message}
                 </div>
@@ -305,10 +285,22 @@ export function AuthForm() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="modern-button modern-button-primary w-full h-12 text-base font-semibold"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
               >
                 {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
               </Button>
+
+              {!isSignUp && (
+                <div className="text-center pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setIsSignUp(true)}
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                  >
+                    New here? Create an account
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>

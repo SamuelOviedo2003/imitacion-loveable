@@ -14,6 +14,7 @@
 - [Settings](#settings)
 - [Loading System](#loading-system)
 - [Database Schema](#database-schema)
+- [Deployment & Technical Requirements](#deployment--technical-requirements)
 - [Error Handling & Edge Cases](#error-handling--edge-cases)
 
 ---
@@ -700,6 +701,98 @@ WHERE p.id = ?;
 - **Database Queries**: Optimized queries with proper indexing
 - **Caching**: Appropriate caching strategies
 - **Real-time**: Efficient Supabase subscriptions
+
+---
+
+## Deployment & Technical Requirements
+
+### Runtime Environment
+- **Node.js Version**: 20.0.0+ (required for Supabase compatibility)
+- **NPM Version**: 8.0.0+ recommended
+- **Base Image**: `node:20-alpine` for Docker containers
+- **Output Mode**: Next.js standalone mode for optimized deployment
+
+### Environment Variables
+**Critical Configuration**:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+**Build-time Requirements**:
+- Environment variables must be available during Docker build phase
+- Variables are embedded into client-side JavaScript bundle during build
+- Deployment platforms must pass variables as build arguments
+
+### Docker Configuration
+**Multi-stage Build Process**:
+1. **Dependencies Stage**: Install production and development dependencies
+2. **Builder Stage**: 
+   - Accept build-time arguments for environment variables
+   - Set environment variables for Next.js build process
+   - Execute `npm run build` with Supabase credentials available
+3. **Runtime Stage**: Copy built application and production dependencies
+
+**Critical Dockerfile Requirements**:
+```dockerfile
+# Accept build-time arguments for Next.js environment variables
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Set environment variables for build time
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+### Dependencies
+**Production Dependencies**:
+- `@supabase/supabase-js` - Database and authentication client
+- `sharp@0.34.3` - Image optimization (pre-installed)
+- `next@14.0.0` - React framework
+- `react@18` - UI framework
+- `typescript` - Type safety
+
+**Image Optimization**:
+- Sharp module included in standalone build
+- WebP and AVIF format support
+- Minimum cache TTL: 60 seconds
+
+### Deployment Validation
+**Pre-deployment Checklist**:
+- [ ] Environment variables configured in deployment platform
+- [ ] Node.js 20+ runtime selected
+- [ ] Build process completes without Supabase connection errors
+- [ ] Application initializes with real Supabase client (not mock functions)
+- [ ] Authentication flow works in production environment
+
+### Common Deployment Issues
+**Supabase Connection Failures**:
+- **Symptom**: "Supabase not configured" errors despite environment variables being set
+- **Cause**: Environment variables not available during build phase
+- **Solution**: Ensure Dockerfile accepts build-time arguments (resolved in commit `6325994`)
+
+**Sharp Module Errors**:
+- **Symptom**: Image optimization failures in production
+- **Cause**: Missing sharp binary in production container  
+- **Solution**: Sharp pre-installed and included in standalone build
+
+**Node.js Version Issues**:
+- **Symptom**: Supabase SDK warnings or runtime errors
+- **Cause**: Using deprecated Node.js versions (18 or below)
+- **Solution**: Upgrade to Node.js 20+ runtime
+
+### Monitoring & Health Checks
+**Application Health**:
+- Supabase client initialization status
+- Authentication service availability
+- Database connection health
+- Image optimization service status
+
+**Performance Metrics**:
+- Page load times under 3 seconds
+- Authentication flow completion under 2 seconds
+- Database query response times under 500ms
+- Image loading optimization active
 
 ---
 
