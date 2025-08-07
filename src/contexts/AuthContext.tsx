@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null
   }
 
-  const switchBusiness = async (businessId: number) => {
+  const switchBusiness = useCallback(async (businessId: number) => {
     if (!user?.id) return
     
     try {
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error switching business:', error)
     }
-  }
+  }, [user?.id])
 
   useEffect(() => {
     // Get initial session
@@ -263,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, isSigningOut, lastSignOutTime])
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       setIsSigningOut(true)
       setLoading(true)
@@ -333,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = '/'
       }, 100)
     }
-  }
+  }, [])
 
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
@@ -346,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isInitializing,
     signOut,
     switchBusiness,
-  }), [user, session, loading, businessData, userProfile, allBusinesses, isInitializing])
+  }), [user, session, loading, businessData, userProfile, allBusinesses, isInitializing, signOut, switchBusiness])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

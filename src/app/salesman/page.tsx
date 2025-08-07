@@ -53,6 +53,8 @@ export default function SalesmanPage() {
                     onChange={(e) => setTimePeriod(Number(e.target.value))}
                     className="appearance-none modern-card bg-white border-0 shadow-md px-4 py-3 pr-10 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:shadow-lg w-48 transition-all duration-200"
                   >
+                    <option value={7}>Last 7 days</option>
+                    <option value={15}>Last 15 days</option>
                     <option value={30}>Last 30 days</option>
                     <option value={60}>Last 60 days</option>
                     <option value={90}>Last 90 days</option>

@@ -14,7 +14,7 @@ const AppointmentSetters = React.memo(function AppointmentSetters({ appointmentS
   
   // Memoize sorted setters to prevent unnecessary re-sorting
   const sortedSetters = useMemo(() => 
-    [...appointmentSetters].sort((a, b) => (b.bookedLeads || 0) - (a.bookedLeads || 0)),
+    [...(appointmentSetters || [])].sort((a, b) => (b.bookedLeads || 0) - (a.bookedLeads || 0)),
     [appointmentSetters]
   )
   

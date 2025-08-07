@@ -286,14 +286,18 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       <Header />
       <div className="max-w-7xl mx-auto px-8 py-6">
-        {/* Modern Back Button */}
+        {/* Enhanced Back Button */}
         <div className="mb-8">
           <button
             onClick={() => router.push('/new-leads')}
-            className="modern-button-secondary flex items-center gap-3"
+            className="modern-card inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm border-0 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 rounded-2xl"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to New Leads</span>
+            <div className="p-2 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
+              <ArrowLeft className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="text-left">
+              <span className="font-semibold text-gray-900 block text-base">Back to New Leads</span>
+            </div>
           </button>
         </div>
         
@@ -306,22 +310,22 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
 
           {/* Top Row: Lead Info + Property Image */}
           <div className="grid-modern-2">
-            {/* Lead Information Card */}
-            <div className="modern-card pastel-card-peach space-y-6">
-              {/* Header */}
+            {/* Lead Information Card - Compact */}
+            <div className="modern-card pastel-card-peach space-y-4">
+              {/* Header - Compact */}
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{leadName}</h2>
-                <p className="text-gray-600 text-sm">Lead Information & Contact Details</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">{leadName}</h2>
+                <p className="text-gray-600 text-xs">Lead Information & Contact Details</p>
               </div>
 
-              {/* Contact Information */}
-              <div className="space-y-4">
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+              {/* Contact Information - Compact */}
+              <div className="space-y-3">
+                <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-orange-100/50">
+                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
                     Contact Information
                   </h4>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <span className="text-gray-700">{lead.email || lead.customer_email || 'No email provided'}</span>
                       {lead.email_valid ? (
@@ -338,23 +342,34 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                {/* Address */}
+                {/* Compact Address Section */}
                 {address && (
-                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <div className="bg-gradient-to-br from-white/80 to-orange-50/30 backdrop-blur-sm rounded-xl p-4 border border-orange-100/50 shadow-sm">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                      <div className="p-1.5 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      </div>
                       Property Address
                     </h4>
-                    <p className="text-gray-700 mb-4">{address}</p>
                     
-                    {/* Distance and Duration */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Distance</p>
+                    <div className="bg-white/80 rounded-lg p-3 mb-3 border border-orange-100/30">
+                      <p className="text-gray-800 font-medium text-base leading-relaxed">{address}</p>
+                    </div>
+                    
+                    {/* Compact Distance and Duration Cards */}
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div className="bg-white/70 rounded-lg p-3 text-center border border-orange-100/30">
+                        <div className="p-1 bg-gradient-to-br from-orange-100 to-orange-200 rounded-md inline-block mb-1">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        </div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Distance</p>
                         <p className="text-lg font-bold text-orange-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</p>
+                      <div className="bg-white/70 rounded-lg p-3 text-center border border-orange-100/30">
+                        <div className="p-1 bg-gradient-to-br from-orange-100 to-orange-200 rounded-md inline-block mb-1">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        </div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Duration</p>
                         <p className="text-lg font-bold text-orange-600">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
                       </div>
                     </div>
@@ -363,21 +378,23 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                       href={googleMapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="modern-button-secondary inline-flex items-center gap-2 text-sm"
+                      className="modern-card inline-flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border-0 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg text-xs font-semibold text-gray-800 hover:scale-105"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <div className="p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-md">
+                        <ExternalLink className="w-3 h-3 text-blue-600" />
+                      </div>
                       View on Maps
                     </a>
                   </div>
                 )}
 
-                {/* Lead Details Grid */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                {/* Compact Lead Details Grid */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-orange-100/50">
+                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
                     Service Details
                   </h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Service Needed</p>
                       <p className="text-sm font-semibold text-gray-900">{service}</p>
@@ -405,13 +422,13 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                {/* Appointment */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-orange-100/50">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                {/* Compact Appointment */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-orange-100/50">
+                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
                     Appointment
                   </h4>
-                  <p className="text-gray-700">{formatAppointmentDate(lead) || 'Not scheduled'}</p>
+                  <p className="text-gray-700 text-sm">{formatAppointmentDate(lead) || 'Not scheduled'}</p>
                 </div>
               </div>
             </div>

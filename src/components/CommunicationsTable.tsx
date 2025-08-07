@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Play, Pause, Send } from "lucide-react"
 import { Communication } from "@/hooks/useCommunications"
 import { useAuth } from "@/contexts/AuthContext"
 import { formatCommunicationDateTime } from "@/lib/leadUtils"
+import { usePerformanceMonitor, MemoryLeakDetector } from "@/lib/performance"
 
 interface CommunicationsTableProps {
   communications: Communication[]
@@ -49,6 +50,7 @@ const getMessageTypeColor = (messageType: string) => {
 
 export default function CommunicationsTable({ communications, loading }: CommunicationsTableProps) {
   const { businessData } = useAuth()
+  const { recordMetric } = usePerformanceMonitor('CommunicationsTable')
   const [audioState, setAudioState] = useState<AudioState>({ 
     playing: false, 
     currentId: null, 
@@ -57,11 +59,35 @@ export default function CommunicationsTable({ communications, loading }: Communi
   })
   const [message, setMessage] = useState("")
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const activeAudios = useRef<Set<HTMLAudioElement>>(new Set())
 
-  // Update progress
+  // Cleanup all active audio elements
+  const cleanupAllAudio = useCallback(() => {
+    activeAudios.current.forEach(audio => {
+      audio.pause()
+      audio.currentTime = 0
+      audio.src = ''
+      audio.load() // Reset the audio element
+      MemoryLeakDetector.untrack(audio)
+    })
+    activeAudios.current.clear()
+    
+    if (audioRef.current) {
+      audioRef.current = null
+    }
+    
+    setAudioState({
+      playing: false,
+      currentId: null,
+      duration: 0,
+      currentTime: 0
+    })
+  }, [])
+
+  // Update progress with memory leak protection
   useEffect(() => {
     const updateProgress = () => {
-      if (audioRef.current) {
+      if (audioRef.current && activeAudios.current.has(audioRef.current)) {
         setAudioState(prev => ({
           ...prev,
           currentTime: audioRef.current?.currentTime || 0,
@@ -71,57 +97,96 @@ export default function CommunicationsTable({ communications, loading }: Communi
     }
 
     const audio = audioRef.current
-    if (audio) {
+    if (audio && activeAudios.current.has(audio)) {
       audio.addEventListener('timeupdate', updateProgress)
       audio.addEventListener('loadedmetadata', updateProgress)
       
       return () => {
-        audio.removeEventListener('timeupdate', updateProgress)
-        audio.removeEventListener('loadedmetadata', updateProgress)
+        if (audio) {
+          audio.removeEventListener('timeupdate', updateProgress)
+          audio.removeEventListener('loadedmetadata', updateProgress)
+        }
       }
     }
   }, [audioRef.current])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupAllAudio()
+    }
+  }, [cleanupAllAudio])
   
   // Sort communications by created date (oldest to newest)
   const sortedCommunications = [...communications].sort((a, b) => {
     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   })
 
-  const handlePlayPause = (communication: Communication) => {
+  const handlePlayPause = useCallback((communication: Communication) => {
     if (!communication.recording_url) return
 
     const isCurrentlyPlaying = audioState.playing && audioState.currentId === communication.communication_id
 
     if (isCurrentlyPlaying) {
       // Pause current audio
-      audioRef.current?.pause()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        recordMetric('audio.pause', { communicationId: communication.communication_id })
+      }
       setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
     } else {
-      // Stop any currently playing audio
-      audioRef.current?.pause()
+      // Clean up any existing audio first
+      if (audioRef.current) {
+        audioRef.current.pause()
+        activeAudios.current.delete(audioRef.current)
+        MemoryLeakDetector.untrack(audioRef.current)
+      }
       
-      // Create new audio element
-      const audio = new Audio(communication.recording_url)
+      // Create new audio element with leak tracking
+      const audio = new Audio()
+      audio.src = communication.recording_url
+      audio.preload = 'metadata'
+      
+      // Track for memory leaks
+      MemoryLeakDetector.track(audio, 'audio-element')
+      activeAudios.current.add(audio)
       audioRef.current = audio
       
-      audio.onended = () => {
+      const cleanup = () => {
         setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
+        activeAudios.current.delete(audio)
+        MemoryLeakDetector.untrack(audio)
       }
-      
-      audio.onerror = () => {
-        setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
-        console.error('Error playing audio')
-      }
-      
-      // Play new audio
-      audio.play().then(() => {
-        setAudioState(prev => ({ ...prev, playing: true, currentId: communication.communication_id }))
-      }).catch((error) => {
+
+      audio.onended = cleanup
+      audio.onerror = (error) => {
         console.error('Error playing audio:', error)
-        setAudioState(prev => ({ ...prev, playing: false, currentId: null }))
-      })
+        recordMetric('audio.error', { communicationId: communication.communication_id })
+        cleanup()
+      }
+      
+      // Play new audio with timeout
+      const playPromise = audio.play()
+      if (playPromise) {
+        playPromise.then(() => {
+          setAudioState(prev => ({ ...prev, playing: true, currentId: communication.communication_id }))
+          recordMetric('audio.play', { communicationId: communication.communication_id })
+        }).catch((error) => {
+          console.error('Error playing audio:', error)
+          recordMetric('audio.playError', { communicationId: communication.communication_id })
+          cleanup()
+        })
+
+        // Timeout after 5 seconds if audio doesn't start
+        setTimeout(() => {
+          if (audioRef.current === audio && !audioState.playing) {
+            console.warn('Audio play timeout')
+            cleanup()
+          }
+        }, 5000)
+      }
     }
-  }
+  }, [audioState.playing, audioState.currentId, recordMetric])
 
   const handleSeek = (communication: Communication, seekTime: number) => {
     if (!audioRef.current || audioState.currentId !== communication.communication_id) return

@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
@@ -11,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import LoadingOverlay from '@/components/LoadingOverlay'
+import Image from 'next/image'
 
 export function AuthForm() {
   const router = useRouter()
@@ -21,6 +22,7 @@ export function AuthForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Redirect to home if user is already authenticated
   useEffect(() => {
@@ -81,7 +83,10 @@ export function AuthForm() {
         
         // Allow sign in regardless of email confirmation status
         
-        setMessage('Signing you in...')
+        // Immediately show loading transition
+        setMessage('')
+        setLoading(false) // Stop the form loading
+        setIsTransitioning(true) // Start the transition loading
         
         // Wait for the session to be established and then redirect
         let retries = 0
@@ -91,7 +96,6 @@ export function AuthForm() {
           const { data: { session } } = await supabase.auth.getSession()
           
           if (session?.user) {
-            setMessage('') // Clear the message before redirect
             try {
               await router.push('/home')
             } catch (error) {
@@ -104,7 +108,6 @@ export function AuthForm() {
           if (retries < maxRetries) {
             setTimeout(checkSessionAndRedirect, 200)
           } else {
-            setMessage('Sign-in successful! Redirecting...')
             // Force redirect even if session check fails
             setTimeout(() => router.push('/home'), 500)
           }
@@ -115,7 +118,6 @@ export function AuthForm() {
         
         // Also set up a backup redirect after 3 seconds regardless
         setTimeout(() => {
-          setMessage('') // Clear message before backup redirect
           try {
             router.push('/home')
           } catch (error) {
@@ -126,9 +128,23 @@ export function AuthForm() {
       }
     } catch (error: any) {
       setMessage(error.message)
+      setIsTransitioning(false) // Reset transition state on error
     } finally {
-      setLoading(false)
+      if (!isTransitioning) {
+        setLoading(false)
+      }
     }
+  }
+
+  // Show loading overlay during sign-in transition
+  if (isTransitioning) {
+    return (
+      <LoadingOverlay 
+        message="Welcome back! Setting up your dashboard..." 
+        show={true}
+        blur={false}
+      />
+    )
   }
 
   return (
@@ -136,21 +152,21 @@ export function AuthForm() {
       <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Left side - Branding */}
         <div className="hidden lg:flex flex-col items-center justify-center text-center space-y-8">
-          <div className="relative">
-            <Image
-              src="/images/house.png"
-              alt="Beautiful modern house"
-              width={500}
-              height={400}
-              className="rounded-3xl shadow-2xl object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-3xl" />
-          </div>
           <div className="space-y-4">
             <h2 className="text-4xl font-bold text-gray-900">
               Welcome to Lead Management
             </h2>
+          </div>
+          <div className="relative">
+            <Image 
+              src="/images/loginImage.png"
+              alt="Lead Management System"
+              width={500} 
+              height={400} 
+              className="transform hover:scale-105 transition-transform duration-300 rounded-2xl shadow-xl"
+            />
+          </div>
+          <div className="space-y-4">
             <p className="text-xl text-gray-600 max-w-md">
               Streamline your real estate business with powerful lead tracking and management tools.
             </p>
