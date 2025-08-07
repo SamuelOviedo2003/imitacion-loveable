@@ -5,17 +5,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { MemoryLeakDetector } from './performance'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Create base client
-const baseClient = createClient(supabaseUrl, supabaseAnonKey, {
+// Create base client only if environment variables are available
+const baseClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
   }
-})
+}) : null
 
 // Request deduplication cache
 class RequestCache {
@@ -120,8 +120,16 @@ const connectionManager = new ConnectionManager()
 export class OptimizedSupabaseClient {
   private client = baseClient
 
+  // Check if client is available
+  get isAvailable() {
+    return this.client !== null
+  }
+
   // Optimized select with deduplication
   from(table: string) {
+    if (!this.client) {
+      throw new Error('Supabase client not available - check environment variables')
+    }
     return {
       select: (columns = '*') => {
         return {
@@ -141,12 +149,21 @@ export class OptimizedSupabaseClient {
       },
       
       // Regular supabase methods for non-cached operations
-      insert: (values: any) => this.client.from(table).insert(values),
+      insert: (values: any) => {
+        if (!this.client) throw new Error('Supabase client not available')
+        return this.client.from(table).insert(values)
+      },
       update: (values: any) => ({
-        eq: (column: string, value: any) => this.client.from(table).update(values).eq(column, value)
+        eq: (column: string, value: any) => {
+          if (!this.client) throw new Error('Supabase client not available')
+          return this.client.from(table).update(values).eq(column, value)
+        }
       }),
       delete: () => ({
-        eq: (column: string, value: any) => this.client.from(table).delete().eq(column, value)
+        eq: (column: string, value: any) => {
+          if (!this.client) throw new Error('Supabase client not available')
+          return this.client.from(table).delete().eq(column, value)
+        }
       })
     }
   }
@@ -171,6 +188,9 @@ export class OptimizedSupabaseClient {
     
     const queryPromise = (async () => {
       try {
+        if (!this.client) {
+          throw new Error('Supabase client not available')
+        }
         let query = this.client.from(table).select(columns)
         
         // Apply filters
@@ -216,11 +236,17 @@ export class OptimizedSupabaseClient {
 
   // Auth methods (not cached)
   get auth() {
+    if (!this.client) {
+      throw new Error('Supabase client not available - check environment variables')
+    }
     return this.client.auth
   }
 
   // Direct client access for complex queries
   get raw() {
+    if (!this.client) {
+      throw new Error('Supabase client not available - check environment variables')
+    }
     return this.client
   }
 

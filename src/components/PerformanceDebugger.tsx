@@ -30,7 +30,16 @@ export default function PerformanceDebugger({ enabled = false }: PerformanceDebu
       setMetrics(monitor.getMetrics())
       setMemorySnapshots(monitor.getMemorySnapshots())
       setObjectCounts(MemoryLeakDetector.getCounts())
-      setSupabaseStats(supabase.getStats())
+      
+      // Safely get Supabase stats
+      try {
+        if (supabase.isAvailable) {
+          setSupabaseStats(supabase.getStats())
+        }
+      } catch (error) {
+        console.warn('Failed to get Supabase stats:', error)
+        setSupabaseStats({})
+      }
     }, 2000)
 
     return () => clearInterval(interval)

@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import LoadingOverlay from '@/components/LoadingOverlay'
-import PerformanceDebugger from '@/components/PerformanceDebugger'
+
+// Lazy load PerformanceDebugger to prevent build issues
+const PerformanceDebugger = lazy(() => import('@/components/PerformanceDebugger'))
 
 interface ProtectedLayoutProps {
   children: React.ReactNode
@@ -53,7 +55,11 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
         <Header />
         {children}
       </div>
-      <PerformanceDebugger enabled={process.env.NODE_ENV === 'development'} />
+      {process.env.NODE_ENV === 'development' && (
+        <Suspense fallback={null}>
+          <PerformanceDebugger enabled={true} />
+        </Suspense>
+      )}
     </div>
   )
 }

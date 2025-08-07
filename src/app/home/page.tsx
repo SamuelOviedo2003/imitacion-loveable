@@ -1,5 +1,4 @@
 import { ArrowRight, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/Button"
 import ProtectedLayout from "@/components/ProtectedLayout"
 
 export default function HomePage() {
