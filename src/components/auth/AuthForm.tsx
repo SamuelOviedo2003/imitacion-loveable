@@ -38,11 +38,7 @@ export function AuthForm() {
   
   const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const isSupabaseConfigured = envUrl && envKey && 
-    !envUrl.includes('your_supabase') && 
-    !envKey.includes('your_supabase') &&
-    envUrl.startsWith('https://') &&
-    envKey.length > 10
+  const isSupabaseConfigured = envUrl && envKey
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +46,7 @@ export function AuthForm() {
     setMessage('')
 
     if (!isSupabaseConfigured) {
-      setMessage('Please configure your Supabase credentials in .env.local')
+      setMessage('Authentication service is not available. Please try again later.')
       setLoading(false)
       return
     }
@@ -209,10 +205,10 @@ export function AuthForm() {
             </div>
 
             {!isSupabaseConfigured && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-                <h3 className="text-sm font-semibold text-amber-800 mb-2">⚠️ Setup Required</h3>
-                <p className="text-sm text-amber-700">
-                  Please configure your Supabase credentials in <code className="bg-amber-100 px-2 py-1 rounded text-xs">.env.local</code>
+              <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl">
+                <h3 className="text-sm font-semibold text-red-800 mb-2">⚠️ Service Unavailable</h3>
+                <p className="text-sm text-red-700">
+                  Authentication service is currently unavailable. Please try again later.
                 </p>
               </div>
             )}
