@@ -197,19 +197,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const formatAppointmentDate = (lead: any) => {
-    if (lead?.start_time) {
-      return formatDateTimeInTimezone(lead.start_time, businessData?.time_zone, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      })
-    }
-    return ''
-  }
 
   const formatDistance = (distanceMeters: number) => {
     if (!distanceMeters) return 'N/A'
@@ -342,51 +329,23 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                {/* Compact Address Section */}
-                {address && (
-                  <div className="bg-gradient-to-br from-white/80 to-orange-50/30 backdrop-blur-sm rounded-xl p-4 border border-orange-100/50 shadow-sm">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2 text-sm">
-                      <div className="p-1.5 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                      </div>
-                      Property Address
-                    </h4>
-                    
-                    <div className="bg-white/80 rounded-lg p-3 mb-3 border border-orange-100/30">
-                      <p className="text-gray-800 font-medium text-base leading-relaxed">{address}</p>
+                {/* Score Section - Moved from right column */}
+                <div className={`bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-orange-100/50 text-center`}>
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2 text-sm">
+                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
+                    Lead Quality Score
+                  </h4>
+                  <div className="mb-4">
+                    <div className={`text-3xl font-bold mb-1 ${getScoreTextColor(lead.score)}`}>
+                      {lead.score ? `${lead.score}%` : 'N/A'}
                     </div>
-                    
-                    {/* Compact Distance and Duration Cards */}
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div className="bg-white/70 rounded-lg p-3 text-center border border-orange-100/30">
-                        <div className="p-1 bg-gradient-to-br from-orange-100 to-orange-200 rounded-md inline-block mb-1">
-                          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                        </div>
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Distance</p>
-                        <p className="text-lg font-bold text-orange-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-3 text-center border border-orange-100/30">
-                        <div className="p-1 bg-gradient-to-br from-orange-100 to-orange-200 rounded-md inline-block mb-1">
-                          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                        </div>
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Duration</p>
-                        <p className="text-lg font-bold text-orange-600">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
-                      </div>
-                    </div>
-                    
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="modern-card inline-flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border-0 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg text-xs font-semibold text-gray-800 hover:scale-105"
-                    >
-                      <div className="p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-md">
-                        <ExternalLink className="w-3 h-3 text-blue-600" />
-                      </div>
-                      View on Maps
-                    </a>
                   </div>
-                )}
+                  <div className="bg-white/80 rounded-lg p-3">
+                    <p className="text-xs leading-relaxed text-gray-700">
+                      {lead.score_summary || 'No detailed score analysis available for this lead.'}
+                    </p>
+                  </div>
+                </div>
 
                 {/* Compact Lead Details Grid */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-orange-100/50">
@@ -422,22 +381,14 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                {/* Compact Appointment */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-orange-100/50">
-                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
-                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
-                    Appointment
-                  </h4>
-                  <p className="text-gray-700 text-sm">{formatAppointmentDate(lead) || 'Not scheduled'}</p>
-                </div>
               </div>
             </div>
 
-            {/* Property Image and Score Card */}
+            {/* Property Image and Address Card */}
             <div className="modern-card pastel-card-sky space-y-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Property & Score</h3>
-                <p className="text-gray-600">Visual overview and lead quality assessment</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Property Overview</h3>
+                <p className="text-gray-600">Property image and address details</p>
               </div>
 
               {/* Property Image */}
@@ -463,22 +414,51 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                 </div>
               </div>
               
-              {/* Score Section */}
-              <div className={`bg-white/70 backdrop-blur-sm rounded-2xl p-8 border ${getScoreBackgroundColor(lead.score).includes('red') ? 'border-red-200/50' : getScoreBackgroundColor(lead.score).includes('yellow') ? 'border-yellow-200/50' : 'border-green-200/50'} text-center`}>
-                <div className="mb-6">
-                  <div className={`text-5xl font-bold mb-2 ${getScoreTextColor(lead.score)}`}>
-                    {lead.score ? `${lead.score}%` : 'N/A'}
+              {/* Property Address Section - Moved from left column */}
+              {address && (
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-sky-100/50">
+                  <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2 text-sm">
+                    <div className="p-1.5 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
+                      <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
+                    </div>
+                    Property Address
+                  </h4>
+                  
+                  <div className="bg-white/80 rounded-lg p-4 mb-4 border border-sky-100/30">
+                    <p className="text-gray-800 font-medium text-base leading-relaxed">{address}</p>
                   </div>
-                  <div className={`text-sm font-medium uppercase tracking-wider ${getScoreTextColor(lead.score)}`}>
-                    Lead Quality Score
+                  
+                  {/* Distance and Duration Cards */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-white/70 rounded-lg p-3 text-center border border-sky-100/30">
+                      <div className="p-1 bg-gradient-to-br from-sky-100 to-sky-200 rounded-md inline-block mb-1">
+                        <div className="w-3 h-3 bg-sky-500 rounded-full"></div>
+                      </div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Distance</p>
+                      <p className="text-lg font-bold text-sky-600">{formatDistance(lead.distance_meters) || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white/70 rounded-lg p-3 text-center border border-sky-100/30">
+                      <div className="p-1 bg-gradient-to-br from-sky-100 to-sky-200 rounded-md inline-block mb-1">
+                        <div className="w-3 h-3 bg-sky-500 rounded-full"></div>
+                      </div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Duration</p>
+                      <p className="text-lg font-bold text-sky-600">{formatDuration(lead.duration_seconds) || 'N/A'}</p>
+                    </div>
                   </div>
+                  
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="modern-card inline-flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border-0 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg text-xs font-semibold text-gray-800 hover:scale-105"
+                  >
+                    <div className="p-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-md">
+                      <ExternalLink className="w-3 h-3 text-blue-600" />
+                    </div>
+                    View on Maps
+                  </a>
                 </div>
-                <div className="bg-white/80 rounded-xl p-4">
-                  <p className="text-sm leading-relaxed text-gray-700">
-                    {lead.score_summary || 'No detailed score analysis available for this lead.'}
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

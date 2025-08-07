@@ -117,7 +117,6 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
             <thead className="bg-gradient-to-r from-gray-50/80 to-blue-50/80">
               <tr>
                 <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Lead Name</th>
-                <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">How Soon</th>
                 <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Service</th>
                 <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Date</th>
                 <th className="text-left py-5 px-6 text-gray-700 font-semibold text-sm">Notes</th>
@@ -151,12 +150,12 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                       </div>
                     </td>
                     <td className="py-5 px-6">
-                      <div className={`inline-flex items-center px-3 py-2 rounded-xl text-xs font-medium ${urgencyColor} shadow-sm`}>
-                        {urgency}
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-700 font-medium">{service}</span>
+                        <div className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium ${urgencyColor} shadow-sm`}>
+                          {urgency}
+                        </div>
                       </div>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-gray-700 font-medium">{service}</span>
                     </td>
                     <td className="py-5 px-6">
                       <span className="text-gray-700 font-medium">{dateTime}</span>

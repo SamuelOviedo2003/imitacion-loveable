@@ -158,11 +158,11 @@ export function AuthForm() {
           {/* Company Logo - Centered Above Form */}
           <div className="text-center mb-8">
             <Image 
-              src="/images/DominateLocalLeads.png"
+              src="/images/DominateLeads2.webp"
               alt="Dominate Local Leads"
               width={200}
-              height={45}
-              className="h-12 w-auto mx-auto"
+              height={50}
+              className="max-h-12 w-auto mx-auto"
             />
           </div>
 

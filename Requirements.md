@@ -30,6 +30,9 @@
 - **Profile Management**: Users can update profile information and avatar
 
 ### UI/UX Behavior
+- **Minimalist Design**: Centered login forms with animated background, no side images or distractions
+- **Company Logo**: `DominateLeads2.webp` displayed above form with natural aspect ratio preservation
+- **Glass Morphism**: Semi-transparent cards with backdrop-blur effects and subtle shadows
 - **Login Redirect**: Unauthenticated users redirect to login page
 - **Post-Auth Redirect**: Successful login redirects to `/home` page
 - **Loading States**: Show loading indicators during auth state changes
@@ -38,12 +41,14 @@
 - **Business Switcher**: Super Admins can switch between businesses (dropdown in header)
 
 ### Authentication Flow
-1. User lands on login page (`/` route)
-2. Users can sign in regardless of email confirmation status
-3. After successful authentication, redirect to `/home`
-4. Protected pages use `ProtectedLayout` wrapper
-5. `AuthContext` manages global auth state
-6. Business data loaded automatically after authentication
+1. User lands on minimalist login page (`/` route) with centered design
+2. Company logo (`DominateLeads2.webp`) displays above form with natural proportions
+3. Users interact with glass morphism form cards over animated gradient background
+4. Users can sign in regardless of email confirmation status
+5. After successful authentication, redirect to `/home`
+6. Protected pages use `ProtectedLayout` wrapper
+7. `AuthContext` manages global auth state
+8. Business data loaded automatically after authentication
 
 ### SQL Queries
 ```sql
@@ -57,11 +62,40 @@ SELECT * FROM business_clients WHERE business_id = $businessId;
 SELECT * FROM business_clients WHERE avatar_url IS NOT NULL;
 ```
 
+### Authentication UI Requirements
+
+#### Visual Design
+- **Layout**: Centered forms with `min-h-screen flex items-center justify-center`
+- **Background**: Animated gradient `bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50`
+- **Floating Elements**: Animated blur circles with staggered pulse animations
+- **Form Container**: `max-w-sm` width with glass morphism styling
+- **Card Design**: `bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30`
+
+#### Company Logo
+- **File**: `/images/DominateLeads2.webp` (WebP format for performance)
+- **Position**: Centered above form with `text-center mb-8`
+- **Aspect Ratio**: Natural proportions using `max-h-12 w-auto mx-auto`
+- **Responsive**: Maintains quality and proportions at all screen sizes
+
+#### Form Elements
+- **Inputs**: Rounded (`rounded-xl`) with subtle backgrounds and focus states
+- **Buttons**: Gradient styling with hover transforms and shadow effects
+- **Spacing**: Consistent `space-y-6` between form elements
+- **Typography**: Modern font weights and appropriate text sizing
+
+#### Consistent Pages
+- **AuthForm** (`/`): Main login/signup page
+- **ForgotPassword** (`/forgot-password`): Password reset request
+- **ResetPassword** (`/reset-password`): New password setting
+- **Shared Styling**: All pages use identical background, logo, and card styling
+
 ### Edge Cases
 - **Failed Authentication**: Show error message, remain on login page
 - **Session Expiry**: Automatic logout and redirect to login
 - **Missing Business Data**: Show loading state until business data loads
 - **Super Admin**: Show business switcher if multiple businesses available
+- **Image Loading**: Logo maintains space and proportions during load
+- **Form Validation**: Real-time validation with appropriate error states
 
 ---
 
@@ -707,10 +741,105 @@ WHERE p.id = ?;
 ## Deployment & Technical Requirements
 
 ### Runtime Environment
-- **Node.js Version**: 20.0.0+ (required for Supabase compatibility)
+- **Node.js Version**: 20.0.0+ (required for Supabase compatibility, specified in package.json engines)
 - **NPM Version**: 8.0.0+ recommended
 - **Base Image**: `node:20-alpine` for Docker containers
 - **Output Mode**: Next.js standalone mode for optimized deployment
+- **TypeScript**: 5.0.0+ with strict mode enabled
+
+### Technology Stack Overview
+
+#### **Core Dependencies (Production-Critical)**
+```json
+{
+  "next": "14.0.0",                    // Next.js App Router framework
+  "react": "^18.2.0",                  // React UI library
+  "react-dom": "^18.2.0",              // React DOM rendering
+  "typescript": "^5.0.0",              // Type safety and development experience
+  "@supabase/supabase-js": "^2.52.0",  // Backend integration (auth, database, real-time)
+  "sharp": "^0.34.3"                   // Image optimization (production requirement)
+}
+```
+
+#### **UI & Styling Dependencies**
+```json
+{
+  "tailwindcss": "^3.3.5",             // Utility-first CSS framework
+  "@radix-ui/react-checkbox": "^1.0.4", // Accessible form components
+  "@radix-ui/react-label": "^2.0.2",   // Accessible form labels
+  "@radix-ui/react-slot": "^1.0.2",    // Component composition utility
+  "lucide-react": "^0.300.0",          // Modern icon library (300+ icons)
+  "class-variance-authority": "^0.7.0", // Type-safe component variants
+  "clsx": "^2.0.0",                    // Conditional className utility
+  "tailwind-merge": "^2.2.0"          // Tailwind class merging utility
+}
+```
+
+#### **Data Visualization Dependencies**
+```json
+{
+  "recharts": "^3.1.0",               // React chart library (pie charts, bar charts)
+  "d3": "^7.9.0",                     // Data visualization library
+  "d3-sankey": "^0.12.3",             // Sankey diagram implementation
+  "@types/d3": "^7.4.3",              // TypeScript definitions for D3
+  "@types/d3-sankey": "^0.12.4"       // TypeScript definitions for D3 Sankey
+}
+```
+
+#### **Development Dependencies**
+```json
+{
+  "@types/node": "^20.0.0",           // Node.js TypeScript definitions
+  "@types/react": "^18.2.0",          // React TypeScript definitions  
+  "@types/react-dom": "^18.2.0",      // React DOM TypeScript definitions
+  "eslint": "^8.0.0",                 // JavaScript/TypeScript linting
+  "eslint-config-next": "14.0.0",     // Next.js ESLint configuration
+  "autoprefixer": "^10.4.16",         // CSS vendor prefixing
+  "postcss": "^8.4.31"                // CSS preprocessing
+}
+```
+
+### Architecture Pattern Analysis
+
+#### **Component-Composition Architecture**
+- **Pattern**: Modern React component composition with custom hooks
+- **State Management**: React Context API (AuthContext) + component-local state
+- **Data Fetching**: Custom hooks pattern with memoization and error handling
+- **Business Logic**: Encapsulated in feature-specific custom hooks
+- **Component Library**: shadcn/ui patterns with Radix UI primitives
+
+#### **Critical Libraries Assessment**
+
+**🔴 Cannot Remove (Core Framework)**
+- `next`, `react`, `react-dom` - Application framework foundation
+- `@supabase/supabase-js` - Backend and authentication integration
+- `typescript` - Type safety across entire codebase
+- `sharp` - Image optimization required for production deployment
+
+**🟠 Feature-Critical (Major Impact if Removed)**
+- `tailwindcss` - Entire styling system built on Tailwind
+- `recharts` + `d3` + `d3-sankey` - Data visualization system (charts in 3 pages)
+- `@radix-ui/*` - Accessible form components and UI primitives
+- `lucide-react` - Icon system used throughout application
+
+**🟡 Nice-to-Have (Can Be Replaced)**
+- `class-variance-authority`, `clsx`, `tailwind-merge` - Utility libraries for styling
+- Type definition packages (`@types/*`) - Development experience enhancement
+
+### Performance & Scalability Considerations
+
+#### **Current Performance Optimizations**
+- **Bundle Optimization**: Next.js 14 automatic code splitting and tree shaking
+- **Image Optimization**: Sharp integration with WebP/AVIF support
+- **Lazy Loading**: React.lazy() for chart components and heavy imports
+- **Memoization**: Strategic use of useMemo/useCallback in custom hooks
+- **Database Optimization**: JOIN-optimized queries with business_id filtering
+
+#### **Potential Bottlenecks**
+- **Chart Libraries**: Multiple chart libraries (Recharts + D3) increase bundle size
+- **Data Processing**: Complex aggregations performed client-side in hooks
+- **No Caching Layer**: Missing React Query/SWR for data synchronization
+- **Real-time Implementation**: Foundation present but incomplete
 
 ### Environment Variables
 **Critical Configuration**:
