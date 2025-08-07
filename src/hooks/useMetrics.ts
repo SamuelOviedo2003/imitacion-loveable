@@ -18,7 +18,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
     totalAmount: 0
   })
   const [appointmentSetters, setAppointmentSetters] = useState<any[]>([])
-  const [revenueData, setRevenueData] = useState<any[]>([])
+  const [revenueData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [lastFetchParams, setLastFetchParams] = useState<{ timePeriod: number, businessId?: number } | null>(null)
 
@@ -251,7 +251,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
       })
 
       // Calculate contacted and booked leads for each setter
-      settersMap.forEach((setter, assigned) => {
+      settersMap.forEach((setter) => {
         setter.leadsCalledSet.forEach((leadId: any) => {
           const lead = leadsMap.get(leadId)
           if (lead) {

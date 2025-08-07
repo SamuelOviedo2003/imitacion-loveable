@@ -186,11 +186,18 @@ ORDER BY l.created_at DESC;
 
 ### Appointment Setters Component
 - **Type**: Vertical carousel (single item display)
-- **Navigation**: Up/down arrows with pagination counter ("1/3")
+- **Navigation**: Up/down arrows with pagination counter ("1/3") 
 - **Sorting**: Performance-based (booked appointments descending)
 - **Structure**: Mirrors LeadMetrics layout exactly for visual symmetry
 - **Fixed Height**: Uses `h-full` class to maintain layout balance
-- **Statistics**: Leads, contacted, booked, contact rate, booking rate per setter
+- **Data Source**: `leads_calls` table joined with `leads` table for business filtering
+- **Statistics**: Leads, contacted, booked, contact rate, booking rate, average response time, total call time per setter
+- **Metrics Calculated**:
+  - Total unique leads called per setter (from `leads_calls.lead_id`)
+  - Contacted/booked counts (from `leads` table status fields)
+  - Contact and booking rates (calculated percentages)
+  - Average response time (from `leads_calls.time_speed` in seconds)
+  - Total call time (from `leads_calls.duration`, only for `working_hours = true` leads)
 
 ### Data Transformations
 - **Name Formatting**: `first_name + " " + last_name` or `first_name` only if last_name missing
