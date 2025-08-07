@@ -270,7 +270,7 @@ export const useMetrics = (timePeriod: number, businessId?: number) => {
         // Group calls by lead_id and assigned to find first call per lead per setter
         const callsByLeadAndSetter = new Map()
         
-        callsData.forEach(call => {
+        callsData.forEach((call: any) => {
           const key = `${call.lead_id}_${call.assigned}`
           if (!callsByLeadAndSetter.has(key)) {
             callsByLeadAndSetter.set(key, [])
